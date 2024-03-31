@@ -97,3 +97,75 @@ jobs:
       run: |
         coverage run --source pycallgraph,scripts -m pytest
         coverage report -m
+  curated_tests:
+    needs:
+      - setup
+    strategy:
+      matrix:
+        python_version: ["3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2"]
+      fail-fast: false
+    name: Curated Tests - Python ${{ matrix.python_version }}
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python_version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python_version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          requirements/development.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install -r requirements/development.txt
+    - name: Install system dependencies
+      run: sudo apt update -yqq && sudo apt install -yqq graphviz
+    - name: Run tests
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        echo ""
+        echo ""
+        echo ""
+        echo "#"
+        echo "# Help command test"
+        echo "#"
+        scripts/pycallgraph --help
+        echo ""
+        echo ""
+        echo ""
+        echo "#"
+        echo "# Example from docs with real existing file"
+        echo "#"
+        python scripts/pycallgraph graphviz -- examples/graphviz/basic.py
+        echo ""
+        echo ""
+        echo ""
+        echo "#"
+        echo "# Basic using example file and no groups"
+        echo "#"
+        python scripts/pycallgraph --no-groups graphviz -- examples/graphviz/basic.py
+        echo ""
+        echo ""
+        echo ""
+        echo "#"
+        echo "# Basic using example file tracing standard library calls also"
+        echo "#"
+        python scripts/pycallgraph --stdlib graphviz -- examples/graphviz/basic.py
+        echo ""
+        echo ""
+        echo ""
+        echo "#"
+        echo "# Basic using example with experimental memory tracking (without psutil)"
+        echo "#"
+        python scripts/pycallgraph --memory graphviz -- examples/graphviz/basic.py
+        echo ""
+        echo ""
+        echo ""
+        pip install psutil
+        echo "#"
+        echo "# Basic using example with experimental memory tracking (with psutil)"
+        echo "#"
+        python scripts/pycallgraph --memory graphviz -- examples/graphviz/basic.py
+        echo ""
+        echo ""
+        echo ""
