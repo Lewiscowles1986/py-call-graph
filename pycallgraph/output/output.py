@@ -1,6 +1,6 @@
 import re
 import os
-from distutils.spawn import find_executable
+from shutil import which
 
 from ..exceptions import PyCallGraphException
 from ..color import Color
@@ -90,7 +90,7 @@ class Output(object):
         raise NotImplementedError('done')
 
     def ensure_binary(self, cmd):
-        if find_executable(cmd):
+        if which(cmd):
             return
 
         raise PyCallGraphException(
