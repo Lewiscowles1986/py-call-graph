@@ -1,7 +1,8 @@
-.. include:: ../README.md
-
 Documentation Index
 ===================
+
+.. include:: ../README.md
+   :parser: markdown
 
 .. toctree::
     :maxdepth: 3
