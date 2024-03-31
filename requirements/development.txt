@@ -1,5 +1,5 @@
-pytest
-pytest-pep8
-pytest-cov
-python-coveralls
-flake8
+pytest==6.1.2
+pytest-pep8==1.0.6
+pytest-cov==2.12.1
+python-coveralls==2.9.3
+flake8==3.9.2

@@ -345,8 +345,8 @@ def show_results(prof, stream=None, precision=3):
             continue
         all_lines = linecache.getlines(filename)
         sub_lines = inspect.getblock(all_lines[code.co_firstlineno - 1:])
-        linenos = range(code.co_firstlineno, code.co_firstlineno +
-                        len(sub_lines))
+        linenos = list(range(code.co_firstlineno, code.co_firstlineno +
+                        len(sub_lines)))
         lines_normalized = {}
 
         header = template.format('Line #', 'Mem usage', 'Increment',
@@ -417,7 +417,7 @@ def magic_mprun(self, parameter_s=''):
     -r: return the LineProfiler object after it has completed profiling.
     """
     try:
-        from StringIO import StringIO
+        from io import StringIO
     except ImportError: # Python 3.x
         from io import StringIO
 
@@ -459,7 +459,7 @@ def magic_mprun(self, parameter_s=''):
     try:
         import builtins
     except ImportError:  # Python 3x
-        import __builtin__ as builtins
+        import builtins as builtins
 
     if 'profile' in builtins.__dict__:
         had_profile = True
@@ -492,14 +492,14 @@ def magic_mprun(self, parameter_s=''):
         page(output, screen_lines=self.shell.rc.screen_length)
     else:
         page(output)
-    print(message,)
+    print((message,))
 
     text_file = opts.T[0]
     if text_file:
         with open(text_file, 'w') as pfile:
             pfile.write(output)
-        print('\n*** Profile printout saved to text file %s. %s' % (text_file,
-                                                                    message))
+        print(('\n*** Profile printout saved to text file %s. %s' % (text_file,
+                                                                    message)))
 
     return_value = None
     if 'r' in opts:
@@ -564,7 +564,7 @@ def magic_memit(self, line=''):
         mem_usage.extend(tmp)
 
     if mem_usage:
-        print('maximum of %d: %f MB per loop' % (repeat, max(mem_usage)))
+        print(('maximum of %d: %f MB per loop' % (repeat, max(mem_usage))))
     else:
         print('ERROR: could not read memory usage, try with a lower interval or more iterations')
 
@@ -608,11 +608,11 @@ if __name__ == '__main__':
     __file__ = _find_script(args[0])
     try:
         if sys.version_info[0] < 3:
-            import __builtin__
-            __builtin__.__dict__['profile'] = prof
+            import builtins
+            builtins.__dict__['profile'] = prof
             ns = locals()
             ns['profile'] = prof # shadow the profile decorator defined above
-            execfile(__file__, ns, ns)
+            exec(compile(open(__file__).read(), __file__, 'exec'), ns, ns)
         else:
             import builtins
             builtins.__dict__['profile'] = prof

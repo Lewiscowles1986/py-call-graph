@@ -13,7 +13,7 @@ def main():
     gephi.output_file = 'large.gdf'
 
     with PyCallGraph(output=gephi):
-        from urllib2 import urlopen
+        from urllib.request import urlopen
         from xml.dom.minidom import parseString
         parseString(urlopen('http://w3.org/').read())
 

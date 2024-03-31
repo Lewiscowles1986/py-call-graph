@@ -38,7 +38,7 @@ class Config(object):
         self.did_init = True
 
         # Update the defaults with anything from kwargs
-        [setattr(self, k, v) for k, v in kwargs.iteritems()]
+        [setattr(self, k, v) for k, v in list(kwargs.items())]
 
         self.create_parser()
 
@@ -55,7 +55,7 @@ class Config(object):
             help='OUTPUT_TYPE', dest='output')
         parent_parser = self.create_parent_parser()
 
-        for name, cls in outputters.items():
+        for name, cls in list(outputters.items()):
             cls.add_arguments(subparsers, parent_parser, usage)
 
     def get_output(self):

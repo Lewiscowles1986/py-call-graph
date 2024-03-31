@@ -25,7 +25,7 @@ class GephiOutput(Output):
     def generate(self):
         '''Returns a string with the contents of a GDF file.'''
 
-        return u'\n'.join([
+        return '\n'.join([
             self.generate_nodes(),
             self.generate_edges(),
         ]) + '\n'
@@ -33,21 +33,21 @@ class GephiOutput(Output):
     def generate_nodes(self):
         output = []
 
-        fields = u', '.join([
-            u'name VARCHAR',
-            u'label VARCHAR',
-            u'group VARCHAR',
-            u'calls INTEGER',
-            u'time DOUBLE',
-            u'memory_in INTEGER',
-            u'memory_out INTEGER',
-            u'color VARCHAR',
-            u'width DOUBLE',
+        fields = ', '.join([
+            'name VARCHAR',
+            'label VARCHAR',
+            'group VARCHAR',
+            'calls INTEGER',
+            'time DOUBLE',
+            'memory_in INTEGER',
+            'memory_out INTEGER',
+            'color VARCHAR',
+            'width DOUBLE',
         ])
-        output.append(u'nodedef> {}'.format(fields))
+        output.append('nodedef> {}'.format(fields))
 
         for node in self.processor.nodes():
-            fields = u','.join([str(a) for a in [
+            fields = ','.join([str(a) for a in [
                 node.name,
                 node.name,
                 node.group,
@@ -55,7 +55,7 @@ class GephiOutput(Output):
                 node.time.value,
                 node.memory_in.value,
                 node.memory_out.value,
-                u"'{}'".format(self.node_color_func(node).rgb_csv()),
+                "'{}'".format(self.node_color_func(node).rgb_csv()),
                 self.node_size(node),
             ]])
             output.append(fields)
@@ -68,25 +68,25 @@ class GephiOutput(Output):
     def generate_edges(self):
         output = []
 
-        fields = u', '.join([
-            u'node1 VARCHAR',
-            u'node2 VARCHAR',
-            u'label VARCHAR',
-            u'labelvisible VARCHAR',
-            u'directed BOOLEAN',
-            u'color VARCHAR',
-            u'width DOUBLE',
+        fields = ', '.join([
+            'node1 VARCHAR',
+            'node2 VARCHAR',
+            'label VARCHAR',
+            'labelvisible VARCHAR',
+            'directed BOOLEAN',
+            'color VARCHAR',
+            'width DOUBLE',
         ])
-        output.append(u'edgedef> {}'.format(fields))
+        output.append('edgedef> {}'.format(fields))
 
         for edge in self.processor.edges():
-            fields = u','.join([str(a) for a in [
+            fields = ','.join([str(a) for a in [
                 edge.src_func,
                 edge.dst_func,
                 self.edge_label(edge),
                 'true',
                 'true',
-                u"'{}'".format(self.edge_color_func(edge).rgb_csv()),
+                "'{}'".format(self.edge_color_func(edge).rgb_csv()),
                 edge.calls.fraction * 2,
             ]])
             output.append(fields)

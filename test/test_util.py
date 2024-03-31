@@ -1,4 +1,4 @@
-from helpers import *
+from pycallgraph.util import Util
 
 
 def test_human_readable_biyte():

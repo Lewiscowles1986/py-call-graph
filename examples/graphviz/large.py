@@ -15,7 +15,7 @@ def main():
     config = Config(include_stdlib=True)
 
     with PyCallGraph(output=graphviz, config=config):
-        from urllib2 import urlopen
+        from urllib.request import urlopen
         from xml.dom.minidom import parseString
         parseString(urlopen('http://w3.org/').read())
 
