@@ -1,7 +1,7 @@
 .. _basic_example:
 
 Basic
-===================
+=====
 
 A simple Python example with two classes.
 
