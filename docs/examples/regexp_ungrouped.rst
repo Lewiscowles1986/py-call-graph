@@ -1,7 +1,7 @@
 .. _regexp_ungrouped_example:
 
 Regular Expressions (Ungrouped)
-===================
+===============================
 
 Similar to the :ref:`regexp_grouped_example` example, but without grouping turned on.
 
