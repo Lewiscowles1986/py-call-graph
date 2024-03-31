@@ -1,6 +1,6 @@
 - description: A simple Python example with two classes.
   execute_after: convert basic.png -resize 300x basic_thumb.png
-  md5: 9d19787f83ff90614a6eac068bb6e4a0
+  md5: 1898425d8a7451087f0e7a6e8412cf1b
   name: basic
   run: ./basic.py
   script: basic.py

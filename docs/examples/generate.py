@@ -20,7 +20,7 @@ IMAGE_TEMPLATE = '''
 .. _{0[name]}_example:
 
 {0[title]}
-===================
+{0[title_len]}
 
 {0[description]}
 
@@ -45,11 +45,12 @@ Below is the generated image from the code above. If you're having issues with t
 index = []
 new_yaml = []
 
-for info in yaml.load(open('examples.yml')):
+for info in yaml.load(open('examples.yml'), yaml.SafeLoader):
     new_info = info
     new_yaml.append(new_info)
 
     index.append(info['name'])
+    info['title_len'] = ('=' * (len(info['title'])))
 
     # Generate the rst for this example
     open('{}.rst'.format(info['name']), 'w').write(
@@ -60,7 +61,9 @@ for info in yaml.load(open('examples.yml')):
     print(info['run'])
 
     # If the hash of the example hasn't changed, don't run again
-    filemd5 = hashlib.md5(open(info['script']).read()).hexdigest()
+    with open(info['script']) as file:
+        filemd5 = hashlib.md5(file.read().encode('utf-8')).hexdigest()
+
     if filemd5 != info.get('md5'):
         info['md5'] = filemd5
 
@@ -69,7 +72,7 @@ for info in yaml.load(open('examples.yml')):
         if 'execute_after' in info:
             print('Running {}'.format(info['execute_after']))
             subprocess.call(info['execute_after'], shell=True)
-
+    del info['title_len']
 
 open('index.rst', 'w').write(INDEX_TEMPLATE.format('\n   '.join(index)))
 

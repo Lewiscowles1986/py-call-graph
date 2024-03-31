@@ -5,19 +5,20 @@ import subprocess
 import yaml
 
 
-items = yaml.load(open('examples.yml'))
+examples = yaml.load(open('examples.yml'), yaml.SafeLoader)
 
-print(items)
+print(examples)
 
 changed = False
 
-for script, save_md5 in items.iteritems():
-    new_md5 = hashlib.md5(open(script).read()).hexdigest()
+for script, save_md5 in examples.items():
+    with open(script) as file:
+        new_md5 = hashlib.md5(file.read().encode('utf-8')).hexdigest()
     if new_md5 == save_md5:
         continue
     changed = True
-    items[script] = new_md5
+    examples[script] = new_md5
     subprocess.call('./{}'.format(script), shell=True)
 
 if changed:
-    open('examples.yml', 'w').write(yaml.dump(items))
+    open('examples.yml', 'w').write(yaml.dump(examples))
