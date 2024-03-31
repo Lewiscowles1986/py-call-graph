@@ -15,3 +15,5 @@ __pycache__
 
 pycallgraph.gdf
 pycallgraph.png
+*env/
+.DS_Store
