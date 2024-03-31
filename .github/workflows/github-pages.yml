@@ -7,8 +7,6 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  pages: write
-  id-token: write
   contents: write
 
 jobs:
