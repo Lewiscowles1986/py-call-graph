@@ -20,7 +20,7 @@ Click on the images below to see a larger version and the source code that gener
 
 ## Project Status
 
-The latest version is **2.0.2** which was released on 2024-03-31, and is a backwards incompatible from the previous release, dropped 2.7 support.
+The latest version is **2.0.4** which was released on 2024-03-31, and is a backwards incompatible from the previous release, dropped 2.7 support.
 The latest version has been tested running on Python versions 3.5 - 3.12
 
 The [project lives on GitHub](https://github.com/lewiscowles1986/py-call-graph/#python-call-graph), where you can [report issues](https://github.com/lewiscowles1986/py-call-graph/issues), contribute to the project by [forking the project](https://help.github.com/articles/fork-a-repo) then creating a [pull request](https://help.github.com/articles/using-pull-requests), or just [browse the source code](https://github.com/lewiscowles1986/py-call-graph/).
