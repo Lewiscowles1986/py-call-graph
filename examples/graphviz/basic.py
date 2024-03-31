@@ -34,7 +34,7 @@ def main():
 
     with PyCallGraph(output=graphviz):
         person = Person()
-        for a in xrange(10):
+        for a in range(10):
             person.add_banana(Banana())
         person.eat_bananas()
 

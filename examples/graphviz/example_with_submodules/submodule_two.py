@@ -1,4 +1,4 @@
-from helpers import helper
+from .helpers import helper
 
 
 class SubmoduleTwo(object):

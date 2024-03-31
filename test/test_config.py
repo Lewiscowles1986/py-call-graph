@@ -1,4 +1,4 @@
-from helpers import *
+from pycallgraph.config import Config
 
 
 def test_init():

@@ -1,7 +1,5 @@
 import subprocess
 
-from helpers import *
-
 
 def execute(arguments):
     command = 'PYTHONPATH=. scripts/pycallgraph ' + arguments

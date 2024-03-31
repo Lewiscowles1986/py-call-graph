@@ -1,6 +1,8 @@
+import pytest
 import tempfile
 
-from helpers import *
+from pycallgraph.config import Config
+from pycallgraph.pycallgraph import PyCallGraph
 
 
 @pytest.fixture(scope='module')

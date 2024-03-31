@@ -1,4 +1,4 @@
-from __future__ import division
+
 
 import inspect
 import sys
@@ -8,11 +8,21 @@ from distutils import sysconfig
 from collections import defaultdict
 from threading import Thread
 try:
-    from Queue import Queue, Empty
+    from queue import Queue, Empty
 except ImportError:
     from queue import Queue, Empty
 
 from .util import Util
+
+specific_version = "{0}.{1}.{2}/lib".format(
+    sys.version_info.major, sys.version_info.minor, sys.version_info.micro
+)
+simple_version = "{0}.{1}/lib".format(
+    sys.version_info.major, sys.version_info.minor
+)
+venv_version = "lib/python{0}.{1}".format(
+    sys.version_info.major, sys.version_info.minor
+)
 
 
 class SyncronousTracer(object):
@@ -106,7 +116,7 @@ class TraceProcessor(Thread):
     def init_libpath(self):
         self.lib_path = sysconfig.get_python_lib()
         path = os.path.split(self.lib_path)
-        if path[1] == 'site-packages':
+        if path[-1] == 'site-packages':
             self.lib_path = path[0]
         self.lib_path = self.lib_path.lower()
 
@@ -269,10 +279,15 @@ class TraceProcessor(Thread):
 
     def is_module_stdlib(self, file_name):
         '''
-        Returns True if the file_name is in the lib directory. Used to check
-        if a function is in the standard library or not.
+        Returns True if the file_name is in a known lib directory.
+        Used to check if a function is in the standard library or not.
         '''
-        return file_name.lower().startswith(self.lib_path)
+        return any([
+            file_name.lower().startswith(self.lib_path),
+            specific_version in file_name.lower(),
+            simple_version in file_name.lower(),
+            venv_version in file_name.lower(),
+        ])
 
     def __getstate__(self):
         '''Used for when creating a pickle. Certain instance variables can't
@@ -294,7 +309,7 @@ class TraceProcessor(Thread):
         grp = defaultdict(list)
         for node in self.nodes():
             grp[node.group].append(node)
-        for g in grp.iteritems():
+        for g in list(grp.items()):
             yield g
 
     def stat_group_from_func(self, func, calls):
@@ -312,14 +327,14 @@ class TraceProcessor(Thread):
         return stat_group
 
     def nodes(self):
-        for func, calls in self.func_count.iteritems():
+        for func, calls in list(self.func_count.items()):
             yield self.stat_group_from_func(func, calls)
 
     def edges(self):
-        for src_func, dests in self.call_dict.iteritems():
+        for src_func, dests in list(self.call_dict.items()):
             if not src_func:
                 continue
-            for dst_func, calls in dests.iteritems():
+            for dst_func, calls in list(dests.items()):
                 edge = self.stat_group_from_func(dst_func, calls)
                 edge.src_func = src_func
                 edge.dst_func = dst_func
@@ -371,5 +386,6 @@ def simple_memoize(callable_object):
         return cache[rest]
 
     return wrapper
+
 
 inspect.getmodule = simple_memoize(inspect.getmodule)

@@ -9,4 +9,4 @@ examples = glob('*.py')
 examples.remove('all.py')
 for example in examples:
     print(example)
-    execfile(example)
+    exec(compile(open(example).read(), example, 'exec'))

@@ -1,9 +1,11 @@
 import re
 import sys
 
-from helpers import *
+import pytest
+
 import calls
 from pycallgraph.tracer import TraceProcessor
+from pycallgraph.config import Config
 
 
 @pytest.fixture
