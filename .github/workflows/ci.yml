@@ -9,20 +9,28 @@ on:
     - cron: 0 6 1 * *
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
   setup:
-
+    strategy:
+      matrix:
+        python_version: ["3.5.10", "3.6.15", "3.7.17", "3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2"]
+      fail-fast: false
+    name: setup - Python ${{ matrix.python-version }}
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.5
-      uses: actions/setup-python@v3
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
       with:
-        python-version: "3.5.10"
+        python-version: ${{ matrix.python-version }}
         cache: 'pip'
         cache-dependency-path: |
           requirements/development.txt
@@ -33,14 +41,18 @@ jobs:
   lint:
     needs:
       - setup
+    strategy:
+      matrix:
+        python_version: ["3.5.10", "3.6.15", "3.7.17", "3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2"]
+      fail-fast: false
+    name: Lint - Python ${{ matrix.python-version }}
     runs-on: ubuntu-20.04
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    - name: Set up Python 3.5
-      uses: actions/setup-python@v3
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
       with:
-        python-version: "3.5.10"
+        python-version: ${{ matrix.python-version }}
         cache: 'pip'
         cache-dependency-path: |
           requirements/development.txt
@@ -55,14 +67,18 @@ jobs:
   test:
     needs:
       - setup
+    strategy:
+      matrix:
+        python_version: ["3.5.10", "3.6.15", "3.7.17", "3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2"]
+      fail-fast: false
+    name: Test - Python ${{ matrix.python-version }}
     runs-on: ubuntu-20.04
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    - name: Set up Python 3.5
-      uses: actions/setup-python@v3
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
       with:
-        python-version: "3.5.10"
+        python-version: ${{ matrix.python-version }}
         cache: 'pip'
         cache-dependency-path: |
           requirements/development.txt
