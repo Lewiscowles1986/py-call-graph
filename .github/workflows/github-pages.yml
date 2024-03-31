@@ -7,6 +7,8 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
+  pages: write
+  id-token: write
   contents: write
 
 jobs:
@@ -41,3 +43,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/_build/html
           destination_dir: ./
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
