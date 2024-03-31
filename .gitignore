@@ -13,3 +13,5 @@ dist/
 __pycache__
 .idea
 
+pycallgraph.gdf
+pycallgraph.png
