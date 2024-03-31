@@ -51,6 +51,18 @@ setup(
     tests_require=['pytest'],
     cmdclass = {'test': PyTest},
 
+    extras_require={
+        'ipython': [
+            # Optional dependencies for jupyter notebooks and ipython
+            'packaging',
+            'ipython',
+        ],
+        'memory-psutil': [
+            # Optional dependency for memory scanning
+            'psutil',
+        ],
+    },
+
     classifiers = [
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
