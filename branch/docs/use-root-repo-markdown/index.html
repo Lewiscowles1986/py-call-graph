@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Documentation Index &#8212; Python Call Graph 2.1.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=514cf933" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    
+    <script src="_static/documentation_options.js?v=841abef3"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Usage Guide" href="guide/index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="guide/index.html" title="Usage Guide"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Python Call Graph 2.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Documentation Index</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <p># Python Call Graph</p>
+<p>Welcome! Python Call Graph is a [Python](<a class="reference external" href="http://www.python.org">http://www.python.org</a>) module that creates [call graph](<a class="reference external" href="http://en.wikipedia.org/wiki/Call_graph">http://en.wikipedia.org/wiki/Call_graph</a>) visualizations for Python applications.</p>
+<p>This repo used to be <cite>pycallgraph</cite> which is still hosted at pypi [link](<a class="reference external" href="https://pypi.org/project/pycallgraph/">https://pypi.org/project/pycallgraph/</a>).</p>
+<p>The uploader makes no representations of their contribution, and merely wanted this to work in python 3.5; with a goal to porting it to 3.11 and 3.12</p>
+<p>[![CI Status](<a class="reference external" href="https://github.com/Lewiscowles1986/py-call-graph/actions/workflows/ci.yml/badge.svg)](https://github.com/Lewiscowles1986/py-call-graph/actions/workflows/ci.yml">https://github.com/Lewiscowles1986/py-call-graph/actions/workflows/ci.yml/badge.svg)](https://github.com/Lewiscowles1986/py-call-graph/actions/workflows/ci.yml</a>)</p>
+<p>## Screenshots</p>
+<p>Click on the images below to see a larger version and the source code that generated them.</p>
+<p>[![Basic Output thumbnail](<a class="reference external" href="http://pycallgraph.readthedocs.io/en/develop/_images/basic_thumb.png)](http://pycallgraph.readthedocs.io/en/develop/examples/basic.html">http://pycallgraph.readthedocs.io/en/develop/_images/basic_thumb.png)](http://pycallgraph.readthedocs.io/en/develop/examples/basic.html</a>)</p>
+<p>[![Regex grouped Output thumbnail](<a class="reference external" href="https://pycallgraph.readthedocs.io/en/develop/_images/regexp_grouped_thumb.png)](https://pycallgraph.readthedocs.io/en/develop/examples/regexp_grouped.html">https://pycallgraph.readthedocs.io/en/develop/_images/regexp_grouped_thumb.png)](https://pycallgraph.readthedocs.io/en/develop/examples/regexp_grouped.html</a>)</p>
+<p>[![Regex ungrouped Output thumbnail](<a class="reference external" href="https://pycallgraph.readthedocs.io/en/develop/_images/regexp_ungrouped_thumb.png)](https://pycallgraph.readthedocs.io/en/develop/examples/regexp_ungrouped.html">https://pycallgraph.readthedocs.io/en/develop/_images/regexp_ungrouped_thumb.png)](https://pycallgraph.readthedocs.io/en/develop/examples/regexp_ungrouped.html</a>)</p>
+<p>## Project Status</p>
+<p>The latest version is <strong>2.1.1</strong> which was released on 2024-03-31.
+The latest version has been tested running on Python versions 3.8 - 3.12</p>
+<p>The [project lives on GitHub](<a class="reference external" href="https://github.com/lewiscowles1986/py-call-graph/#python-call-graph">https://github.com/lewiscowles1986/py-call-graph/#python-call-graph</a>), where you can [report issues](<a class="reference external" href="https://github.com/lewiscowles1986/py-call-graph/issues">https://github.com/lewiscowles1986/py-call-graph/issues</a>), contribute to the project by [forking the project](<a class="reference external" href="https://help.github.com/articles/fork-a-repo">https://help.github.com/articles/fork-a-repo</a>) then creating a [pull request](<a class="reference external" href="https://help.github.com/articles/using-pull-requests">https://help.github.com/articles/using-pull-requests</a>), or just [browse the source code](<a class="reference external" href="https://github.com/lewiscowles1986/py-call-graph/">https://github.com/lewiscowles1986/py-call-graph/</a>).</p>
+<p>The documentation needs some work stiil. Feel free to contribute :smile:</p>
+<p>## Features</p>
+<ul class="simple">
+<li><p>Support for Python 3.8 - 3.12.</p></li>
+<li><p>Static visualizations of the call graph using various tools such as Graphviz and Gephi.</p></li>
+<li><p>Execute pycallgraph from the command line or import it in your code.</p></li>
+<li><p>Customisable colors. You can programatically set the colors based on number of calls, time taken, memory usage, etc.</p></li>
+<li><p>Modules can be visually grouped together.</p></li>
+<li><p>Easily extendable to create your own output formats.</p></li>
+</ul>
+<p>## Quick Start</p>
+<p>Installation is easy as</p>
+<p><a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>shell
+pip install python-call-graph</p>
+<p><a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a></p>
+<p>You can either use the [command-line interface](<a class="reference external" href="https://pycallgraph.readthedocs.io/en/develop/guide/command_line_usage.html">https://pycallgraph.readthedocs.io/en/develop/guide/command_line_usage.html</a>) for a quick visualization of your Python script, or the [pycallgraph module](<a class="reference external" href="https://pycallgraph.readthedocs.io/en/develop/api/pycallgraph.html">https://pycallgraph.readthedocs.io/en/develop/api/pycallgraph.html</a>) for more fine-grained settings.</p>
+<p>The following examples specify graphviz as the outputter, so it’s required to be installed. They will generate a file called <cite>pycallgraph.png</cite>.</p>
+<p>### The command-line method of running pycallgraph is</p>
+<p><a href="#id9"><span class="problematic" id="id10">``</span></a><a href="#id11"><span class="problematic" id="id12">`</span></a>shell
+pycallgraph graphviz – ./mypythonscript.py</p>
+<p><a href="#id13"><span class="problematic" id="id14">``</span></a><a href="#id15"><span class="problematic" id="id16">`</span></a></p>
+<p>### A simple use of the API is</p>
+<p><a href="#id17"><span class="problematic" id="id18">``</span></a><a href="#id19"><span class="problematic" id="id20">`</span></a>python
+from pycallgraph import PyCallGraph
+from pycallgraph.output import GraphvizOutput</p>
+<dl class="simple">
+<dt>with PyCallGraph(output=GraphvizOutput()):</dt><dd><p>code_to_profile()</p>
+</dd>
+</dl>
+<p><a href="#id21"><span class="problematic" id="id22">``</span></a><a href="#id23"><span class="problematic" id="id24">`</span></a></p>
+<p>## Documentation</p>
+<p>Feel free to browse the [documentation of pycallgraph](<a class="reference external" href="https://pycallgraph.readthedocs.io/en/develop/">https://pycallgraph.readthedocs.io/en/develop/</a>) for the [usage guide](<a class="reference external" href="https://pycallgraph.readthedocs.io/en/develop/guide/index.html">https://pycallgraph.readthedocs.io/en/develop/guide/index.html</a>) and [API reference](<a class="reference external" href="https://pycallgraph.readthedocs.io/en/develop/api/api.html">https://pycallgraph.readthedocs.io/en/develop/api/api.html</a>).</p>
+<section id="documentation-index">
+<h1>Documentation Index<a class="headerlink" href="#documentation-index" title="Link to this heading">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/index.html">Usage Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="guide/intro.html">Intro</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide/outputs.html">Outputs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="guide/outputs.html#graphviz">Graphviz</a></li>
+<li class="toctree-l3"><a class="reference internal" href="guide/outputs.html#gephi">Gephi</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="guide/filtering.html">Filtering</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="guide/filtering.html#banana">Banana</a></li>
+<li class="toctree-l3"><a class="reference internal" href="guide/filtering.html#no-filter">No Filter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="guide/filtering.html#hide-the-secret">Hide the secret</a></li>
+<li class="toctree-l3"><a class="reference internal" href="guide/filtering.html#maximum-depth">Maximum Depth</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="guide/command_line_usage.html">Command-line Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="guide/command_line_usage.html#synopsis">Synopsis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="guide/command_line_usage.html#description">Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="guide/command_line_usage.html#general-arguments">General Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="guide/command_line_usage.html#filtering-arguments">Filtering Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="guide/command_line_usage.html#graphviz-arguments">Graphviz Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="guide/command_line_usage.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="guide/custom_outputs.html">Custom Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/basic.html">Basic</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/basic.html#source-code">Source Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/basic.html#generated-image">Generated Image</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples/regexp_grouped.html">Regular Expressions (Grouped)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/regexp_grouped.html#source-code">Source Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/regexp_grouped.html#generated-image">Generated Image</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples/regexp_ungrouped.html">Regular Expressions (Ungrouped)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/regexp_ungrouped.html#source-code">Source Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/regexp_ungrouped.html#generated-image">Generated Image</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/api.html">API Classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/pycallgraph.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyCallGraph</span></code> — Main interface to Python Call Graph</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/pycallgraph.html#pycallgraph.PyCallGraph"><code class="docutils literal notranslate"><span class="pre">PyCallGraph</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/output.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">output.Output</span></code> — Base class for all output modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/output.html#pycallgraph.output.Output"><code class="docutils literal notranslate"><span class="pre">Output</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/globbing_filter.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">globbing_filter.GlobbingFilter</span></code> — Class used for filtering methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/globbing_filter.html#pycallgraph.globbing_filter.GlobbingFilter"><code class="docutils literal notranslate"><span class="pre">GlobbingFilter</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/internal.html">Internal Classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/tracer.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="guide/index.html"
+                          title="next chapter">Usage Guide</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="guide/index.html" title="Usage Guide"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Python Call Graph 2.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Documentation Index</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2007-2013 Gerald Kaszuba, et al..
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>
