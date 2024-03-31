@@ -38,6 +38,5 @@ doc:
 	cd docs/guide/filtering && ./generate.py
 
 	make -C docs html man
-	cp docs/_build/man/pycallgraph.1 man/
-	docs/update_readme.py
+	mv docs/_build/man/pycallgraph.1 man/
 
