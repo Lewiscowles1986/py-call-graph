@@ -22,15 +22,15 @@ jobs:
       matrix:
         python_version: ["3.5.10", "3.6.15", "3.7.17", "3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2"]
       fail-fast: false
-    name: setup - Python ${{ matrix.python-version }}
+    name: setup - Python ${{ matrix.python_version }}
     runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python ${{ matrix.python_version }}
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ matrix.python_version }}
         cache: 'pip'
         cache-dependency-path: |
           requirements/development.txt
@@ -45,14 +45,14 @@ jobs:
       matrix:
         python_version: ["3.5.10", "3.6.15", "3.7.17", "3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2"]
       fail-fast: false
-    name: Lint - Python ${{ matrix.python-version }}
+    name: Lint - Python ${{ matrix.python_version }}
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python ${{ matrix.python_version }}
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ matrix.python_version }}
         cache: 'pip'
         cache-dependency-path: |
           requirements/development.txt
@@ -71,14 +71,14 @@ jobs:
       matrix:
         python_version: ["3.5.10", "3.6.15", "3.7.17", "3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2"]
       fail-fast: false
-    name: Test - Python ${{ matrix.python-version }}
+    name: Test - Python ${{ matrix.python_version }}
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python ${{ matrix.python_version }}
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ matrix.python_version }}
         cache: 'pip'
         cache-dependency-path: |
           requirements/development.txt
