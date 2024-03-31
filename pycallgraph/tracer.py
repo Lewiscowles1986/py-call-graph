@@ -2,8 +2,8 @@
 
 import inspect
 import sys
+import sysconfig
 import time
-from distutils import sysconfig
 from collections import defaultdict
 from threading import Thread
 try:
@@ -104,7 +104,7 @@ class TraceProcessor(Thread):
 
     def init_libpath(self):
         self.lib_paths = [
-            sysconfig.get_python_lib(standard_lib=True).lower(),
+            sysconfig.get_path('purelib').lower(),
             sysconfig.get_config_var('LIBDEST').lower(),
         ]
 
