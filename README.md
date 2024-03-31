@@ -12,11 +12,11 @@ The uploader makes no representations of their contribution, and merely wanted t
 
 Click on the images below to see a larger version and the source code that generated them.
 
-[![Basic Output thumbnail](http://pycallgraph.readthedocs.io/en/develop/_images/basic_thumb.png)](http://pycallgraph.readthedocs.io/en/develop/examples/basic.html)
+[![Basic Output thumbnail](https://lewiscowles1986.github.io/py-call-graph/_images/basic_thumb.png)](https://lewiscowles1986.github.io/py-call-graph/examples/basic.html)
 
-[![Regex grouped Output thumbnail](https://pycallgraph.readthedocs.io/en/develop/_images/regexp_grouped_thumb.png)](https://pycallgraph.readthedocs.io/en/develop/examples/regexp_grouped.html)
+[![Regex grouped Output thumbnail](https://lewiscowles1986.github.io/py-call-graph/_images/regexp_grouped_thumb.png)](https://lewiscowles1986.github.io/py-call-graph/examples/regexp_grouped)
 
-[![Regex ungrouped Output thumbnail](https://pycallgraph.readthedocs.io/en/develop/_images/regexp_ungrouped_thumb.png)](https://pycallgraph.readthedocs.io/en/develop/examples/regexp_ungrouped.html)
+[![Regex ungrouped Output thumbnail](https://lewiscowles1986.github.io/py-call-graph/_images/regexp_ungrouped_thumb.png)](https://lewiscowles1986.github.io/py-call-graph/examples/regexp_ungrouped.html)
 
 ## Project Status
 
