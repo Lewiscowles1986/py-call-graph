@@ -123,4 +123,41 @@ jobs:
     - name: Run tests
       run: |
         export PYTHONPATH=$PYTHONPATH:$(pwd)
+        echo ""
+        echo ""
+        echo ""
+        echo "#"
+        echo "# Help command test"
+        echo "#"
+        scripts/pycallgraph --help
+        echo ""
+        echo ""
+        echo ""
+        echo "#"
+        echo "# Example from docs with real existing file"
+        echo "#"
         python scripts/pycallgraph graphviz -- examples/graphviz/basic.py
+        echo ""
+        echo ""
+        echo ""
+        echo "#"
+        echo "# Basic using example file and no groups"
+        echo "#"
+        python scripts/pycallgraph --no-groups graphviz -- examples/graphviz/basic.py
+        echo ""
+        echo ""
+        echo ""
+        echo "#"
+        echo "# Basic using example file tracing standard library calls also"
+        echo "#"
+        python scripts/pycallgraph --stdlib graphviz -- examples/graphviz/basic.py
+        echo ""
+        echo ""
+        echo ""
+        echo "#"
+        echo "# Basic using example with experimental memory tracking"
+        echo "#"
+        python scripts/pycallgraph --memory graphviz -- examples/graphviz/basic.py
+        echo ""
+        echo ""
+        echo ""
