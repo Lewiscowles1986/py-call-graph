@@ -95,7 +95,7 @@ jobs:
           test pycallgraph examples
     - name: Collect coverage
       run: |
-        coverage run --source pycallgraph,scripts -m py.test
+        coverage run --source pycallgraph,scripts -m py.test || coverage run --source pycallgraph,scripts -m pytest
         coverage report -m
   curated_tests:
     needs:
