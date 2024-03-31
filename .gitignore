@@ -1,0 +1,6 @@
+docs/_build/
+pycallgraph/
+examples/
+test/
+*.egg-info
+*venv/
