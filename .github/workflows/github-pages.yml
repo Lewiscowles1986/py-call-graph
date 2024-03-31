@@ -1,13 +1,14 @@
 name: documentation
 
 on:
-  push:
-    branches: [main]
   pull_request:
+  push:
+    branches:    
+      - main
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -46,13 +47,3 @@ jobs:
           publish_dir: docs/_build/html
           destination_dir: ./
           keep_files: true
-      - name: force-redeployment
-        run: |
-          git fetch --all
-          git checkout gh-pages
-          git pull --ff-only
-          touch .nojekyll
-          git add -f .nojekyll
-          git config user.name "GitHub Actions Bot"
-          git config user.email "bot@github.com"
-          git commit -am "docs: force redeploy"
