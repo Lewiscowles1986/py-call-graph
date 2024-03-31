@@ -47,3 +47,16 @@ jobs:
           publish_dir: docs/_build/html
           destination_dir: ./
           keep_files: true
+      - name: Create files for redeploy
+        run: |
+          rm -rf tmp/bump
+          mkdir -p tmp/bump
+          echo $(date +"%Y-%m-%dT%H%M%S") > tmp/bump/last_deploy
+      - name: Force redeploy of GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          publish_branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: tmp/bump
+          destination_dir: ./
+          keep_files: true
