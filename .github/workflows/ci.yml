@@ -52,3 +52,32 @@ jobs:
         flake8 --exclude=__init__.py,memory_profiler.py pycallgraph
         flake8 --ignore=F403 test
         flake8 examples
+  test:
+    needs:
+      - setup
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Set up Python 3.5
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.5.10"
+        cache: 'pip'
+        cache-dependency-path: |
+          requirements/development.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install -r requirements/development.txt
+    - name: Install system dependencies
+      run: sudo apt update -yqq && sudo apt install -yqq graphviz
+    - name: Run tests
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        py.test \
+          --ignore=pycallgraph/memory_profiler.py \
+          test pycallgraph examples
+    - name: Collect coverage
+      run: |
+        coverage run --source pycallgraph,scripts -m py.test
+        coverage report -m
