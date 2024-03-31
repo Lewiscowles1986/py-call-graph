@@ -2,7 +2,9 @@
 Python Call Graph is a library and command line tool that visualises the flow
 of your Python application.
 
-See http://pycallgraph.slowchop.com/ for more information.
+This is a fork of the original, updated to work with Python 3.5 - 3.11 and from 2.1.0 3.8 - 3.12
+
+See https://pycallgraph.readthedocs.io/en/develop/ for more information.
 '''
 from .metadata import __version__
 from .metadata import __copyright__

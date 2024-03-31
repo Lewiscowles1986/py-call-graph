@@ -1,7 +1,7 @@
 # A different file to pycallgraph.py because of circular import problem
 
-__version__ = '2.0.5'
-__copyright__ = 'Copyright Gerald Kaszuba 2007-2013'
+__version__ = '2.1.0'
+__copyright__ = 'Copyright Gerald Kaszuba 2007-2024'
 __license__ = 'GPLv2'
 __author__ = 'Gerald Kaszuba'
 __email__ = 'pycallgraph@gakman.com'

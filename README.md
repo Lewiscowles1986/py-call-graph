@@ -20,8 +20,8 @@ Click on the images below to see a larger version and the source code that gener
 
 ## Project Status
 
-The latest version is **2.0.5** which was released on 2024-03-31, and is a backwards incompatible from the previous release, dropped 2.7 support.
-The latest version has been tested running on Python versions 3.5 - 3.12
+The latest version is **2.1.0** which was released on 2024-03-31, and is a backwards incompatible from the previous release, dropped 2.7 support.
+The latest version has been tested running on Python versions 3.8 - 3.12
 
 The [project lives on GitHub](https://github.com/lewiscowles1986/py-call-graph/#python-call-graph), where you can [report issues](https://github.com/lewiscowles1986/py-call-graph/issues), contribute to the project by [forking the project](https://help.github.com/articles/fork-a-repo) then creating a [pull request](https://help.github.com/articles/using-pull-requests), or just [browse the source code](https://github.com/lewiscowles1986/py-call-graph/).
 
@@ -29,7 +29,7 @@ The documentation needs some work stiil. Feel free to contribute :smile:
 
 ## Features
 
-* Support for Python 3.5 - 3.12.
+* Support for Python 3.8 - 3.12.
 * Static visualizations of the call graph using various tools such as Graphviz and Gephi.
 * Execute pycallgraph from the command line or import it in your code.
 * Customisable colors. You can programatically set the colors based on number of calls, time taken, memory usage, etc.
