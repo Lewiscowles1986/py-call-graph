@@ -4,13 +4,15 @@ Welcome! Python Call Graph is a [Python](http://www.python.org) module that crea
 
 This repo used to be `pycallgraph` which is still hosted at pypi [link](https://pypi.org/project/pycallgraph/).
 
+The uploader makes no representations of their contribution, and merely wanted this to work in python 3.5; with a goal to porting it to 3.11 and 3.12
+
 [![CI Status](https://github.com/Lewiscowles1986/py-call-graph/actions/workflows/ci.yml/badge.svg)](https://github.com/Lewiscowles1986/py-call-graph/actions/workflows/ci.yml)
 
 ## Screenshots
 
 Click on the images below to see a larger version and the source code that generated them.
 
-[![Basic Output thumbnail](http://pycallgraph.slowchop.com/en/develop/_images/basic_thumb.png)](http://pycallgraph.slowchop.com/en/develop/examples/basic.html)
+[![Basic Output thumbnail](http://pycallgraph.readthedocs.io/en/develop/_images/basic_thumb.png)](http://pycallgraph.readthedocs.io/en/develop/examples/basic.html)
 
 [![Regex grouped Output thumbnail](https://pycallgraph.readthedocs.io/en/develop/_images/regexp_grouped_thumb.png)](https://pycallgraph.readthedocs.io/en/develop/examples/regexp_grouped.html)
 
@@ -18,7 +20,7 @@ Click on the images below to see a larger version and the source code that gener
 
 ## Project Status
 
-The latest version is **2.0.0** which was released on 2024-03-31, and is a backwards incompatible from the previous release, dropped 2.7 support and is targetting the quite old Python 3.5.
+The latest version is **2.0.1** which was released on 2024-03-31, and is a backwards incompatible from the previous release, dropped 2.7 support and is targetting the quite old Python 3.5.
 
 The [project lives on GitHub](https://github.com/lewiscowles1986/py-call-graph/#python-call-graph), where you can [report issues](https://github.com/lewiscowles1986/py-call-graph/issues), contribute to the project by [forking the project](https://help.github.com/articles/fork-a-repo) then creating a [pull request](https://help.github.com/articles/using-pull-requests), or just [browse the source code](https://github.com/lewiscowles1986/py-call-graph/).
 
