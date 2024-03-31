@@ -104,7 +104,7 @@ class TraceProcessor(Thread):
 
     def init_libpath(self):
         self.lib_paths = [
-            sysconfig.get_python_lib().lower(),
+            sysconfig.get_python_lib(standard_lib=True).lower(),
             sysconfig.get_config_var('LIBDEST').lower(),
         ]
 
