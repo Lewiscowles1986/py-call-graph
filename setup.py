@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from os import path
+from pathlib import Path
 from setuptools import setup
 import sys
 
@@ -17,6 +18,8 @@ import pycallgraph
 #    data_files=None
 
 data_files=None
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
 
 class PyTest(TestCommand):
 
@@ -31,10 +34,11 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 setup(
-    name='pycallgraph',
+    name='python-call-graph',
     version=pycallgraph.__version__,
     description=pycallgraph.__doc__.strip().replace('\n', ' '),
-    long_description=open('README.rst').read(),
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     author=pycallgraph.__author__,
     author_email=pycallgraph.__email__,
     license=open('LICENSE').read(),
@@ -42,11 +46,6 @@ setup(
     packages=['pycallgraph', 'pycallgraph.output'],
     scripts=['scripts/pycallgraph'],
     data_files=data_files,
-
-    # TODO: Update download_url
-    download_url =
-    'http://pycallgraph.slowchop.com/files/download/pycallgraph-%s.tar.gz' % \
-        pycallgraph.__version__,
 
     # Testing
     tests_require=['pytest'],
