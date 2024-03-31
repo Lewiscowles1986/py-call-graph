@@ -19,7 +19,6 @@ deps:
 
 tests:
 	py.test \
-		--pep8 \
 		--ignore=pycallgraph/memory_profiler.py \
 		test pycallgraph examples
 
