@@ -2,7 +2,6 @@
 
 import inspect
 import sys
-import os
 import time
 from distutils import sysconfig
 from collections import defaultdict
@@ -13,16 +12,6 @@ except ImportError:
     from queue import Queue, Empty
 
 from .util import Util
-
-specific_version = "{0}.{1}.{2}/lib".format(
-    sys.version_info.major, sys.version_info.minor, sys.version_info.micro
-)
-simple_version = "{0}.{1}/lib".format(
-    sys.version_info.major, sys.version_info.minor
-)
-venv_version = "lib/python{0}.{1}".format(
-    sys.version_info.major, sys.version_info.minor
-)
 
 
 class SyncronousTracer(object):
@@ -114,11 +103,10 @@ class TraceProcessor(Thread):
         self.call_stack_memory_out = []
 
     def init_libpath(self):
-        self.lib_path = sysconfig.get_python_lib()
-        path = os.path.split(self.lib_path)
-        if path[-1] == 'site-packages':
-            self.lib_path = path[0]
-        self.lib_path = self.lib_path.lower()
+        self.lib_paths = [
+            sysconfig.get_python_lib().lower(),
+            sysconfig.get_config_var('LIBDEST').lower(),
+        ]
 
     def queue(self, frame, event, arg, memory):
         data = {
@@ -283,10 +271,8 @@ class TraceProcessor(Thread):
         Used to check if a function is in the standard library or not.
         '''
         return any([
-            file_name.lower().startswith(self.lib_path),
-            specific_version in file_name.lower(),
-            simple_version in file_name.lower(),
-            venv_version in file_name.lower(),
+            file_name.lower().startswith(lib_path)
+            for lib_path in self.lib_paths
         ])
 
     def __getstate__(self):
