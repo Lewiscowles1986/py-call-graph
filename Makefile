@@ -3,9 +3,13 @@ export PYTHONPATH=$(shell pwd)
 all: deps tests doc
 
 pypi:
-	python setup.py sdist upload
+	rm -rf dist
+	python setup.py sdist
+	twine check dist/*
+	python -m twine upload dist/*
 
 clean:
+	rm -rf dist
 	make -C docs clean
 	-rm .coverage
 
