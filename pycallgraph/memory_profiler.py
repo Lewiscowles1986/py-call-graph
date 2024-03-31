@@ -422,10 +422,10 @@ def magic_mprun(self, parameter_s=''):
         from io import StringIO
 
     # Local imports to avoid hard dependency.
-    from distutils.version import LooseVersion
+    from packaging.version import parse
     import IPython
-    ipython_version = LooseVersion(IPython.__version__)
-    if ipython_version < '0.11':
+    ipython_version = parse(IPython.__version__)
+    if ipython_version < parse('0.11'):
         from IPython.genutils import page
         from IPython.ipstruct import Struct
         from IPython.ipapi import UsageError
