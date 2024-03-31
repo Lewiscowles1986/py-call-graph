@@ -23,7 +23,7 @@ try:
     def _get_memory(pid):
         process = psutil.Process(pid)
         try:
-            mem = float(process.get_memory_info()[0]) / (1024 ** 2)
+            mem = float(process.memory_info()[0]) / (1024 ** 2)
         except psutil.AccessDenied:
             mem = -1
         return mem
@@ -422,10 +422,10 @@ def magic_mprun(self, parameter_s=''):
         from io import StringIO
 
     # Local imports to avoid hard dependency.
-    from packaging.version import parse
+    from distutils.version import LooseVersion
     import IPython
-    ipython_version = parse(IPython.__version__)
-    if ipython_version < parse('0.11'):
+    ipython_version = LooseVersion(IPython.__version__)
+    if ipython_version < '0.11':
         from IPython.genutils import page
         from IPython.ipstruct import Struct
         from IPython.ipapi import UsageError
