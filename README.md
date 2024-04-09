@@ -2,7 +2,7 @@
 
 Welcome! Python Call Graph is a [Python](http://www.python.org) module that creates [call graph](http://en.wikipedia.org/wiki/Call_graph) visualizations for Python applications.
 
-This repo used to be `pycallgraph` which is still hosted at pypi [link](https://pypi.org/project/pycallgraph/).
+This repo used to be `pycallgraph` which is still hosted at pypi [link](https://pypi.org/project/python-call-graph/).
 
 The uploader makes no representations of their contribution, and merely wanted this to work in python 3.5; with a goal to porting it to 3.11 and 3.12
 
@@ -45,7 +45,7 @@ pip install python-call-graph
 
 ```
 
-You can either use the [command-line interface](https://pycallgraph.readthedocs.io/en/develop/guide/command_line_usage.html) for a quick visualization of your Python script, or the [pycallgraph module](https://pycallgraph.readthedocs.io/en/develop/api/pycallgraph.html) for more fine-grained settings.
+You can either use the [command-line interface](https://lewiscowles1986.github.io/py-call-graph/guide/command_line_usage.html) for a quick visualization of your Python script, or the [pycallgraph module](https://lewiscowles1986.github.io/py-call-graph/api/pycallgraph.html) for more fine-grained settings.
 
 The following examples specify graphviz as the outputter, so it's required to be installed. They will generate a file called `pycallgraph.png`.
 
@@ -69,4 +69,4 @@ with PyCallGraph(output=GraphvizOutput()):
 
 ## Documentation
 
-Feel free to browse the [documentation of pycallgraph](https://pycallgraph.readthedocs.io/en/develop/) for the [usage guide](https://pycallgraph.readthedocs.io/en/develop/guide/index.html) and [API reference](https://pycallgraph.readthedocs.io/en/develop/api/api.html).
+Feel free to browse the [documentation of pycallgraph](https://lewiscowles1986.github.io/py-call-graph/) for the [usage guide](https://lewiscowles1986.github.io/py-call-graph/guide/index.html) and [API reference](https://lewiscowles1986.github.io/py-call-graph/api/api.html).
