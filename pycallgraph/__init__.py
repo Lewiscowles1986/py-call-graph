@@ -4,7 +4,7 @@ of your Python application.
 
 This is a fork of the original, updated to work with Python 3.5 - 3.11 and from 2.1.0 3.8 - 3.12
 
-See https://pycallgraph.readthedocs.io/en/develop/ for more information.
+See https://lewiscowles1986.github.io/py-call-graph/ for more information.
 '''
 from .metadata import __version__
 from .metadata import __copyright__
