@@ -6,6 +6,9 @@ This repo used to be `pycallgraph` which is still hosted at pypi [link](https://
 
 The uploader makes no representations of their contribution, and merely wanted this to work in python 3.5; with a goal to porting it to 3.11 and 3.12
 
+> [! NOTE]
+> Please give more ideas for problems or further use-cases for this repo. I am really glad folks like it, but it's mostly the original author work, and I don't yet know what more to add to this.
+
 [![CI Status](https://github.com/Lewiscowles1986/py-call-graph/actions/workflows/ci.yml/badge.svg)](https://github.com/Lewiscowles1986/py-call-graph/actions/workflows/ci.yml)
 
 ## Screenshots
