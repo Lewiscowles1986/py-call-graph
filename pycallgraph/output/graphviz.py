@@ -16,7 +16,7 @@ class GraphvizOutput(Output):
     def __init__(self, **kwargs):
         self.tool = 'dot'
         self.output_file = 'pycallgraph.png'
-        self.output_type = 'png'
+        self.output_type = os.path.splitext(self.output_file)[1][1:]
         self.font_name = 'Verdana'
         self.font_size = 7
         self.group_font_size = 10
@@ -101,6 +101,8 @@ class GraphvizOutput(Output):
         with os.fdopen(fd, 'w') as f:
             f.write(source)
 
+        self.output_type = os.path.splitext(self.output_file)[1][1:]
+        
         cmd = '"{0}" -T{1} -o{2} {3}'.format(
             self.tool, self.output_type, self.output_file, temp_name
         )
