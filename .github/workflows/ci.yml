@@ -24,7 +24,7 @@ jobs:
     steps:
       - id: set-matrix
         run: |
-          VERSIONS=$(jq -nc '["3.8.18", "3.9.11", "3.9.21", "3.10.4", "3.10.16", "3.11.0", "3.11.11", "3.12.0", "3.12.9", "3.13.0", "3.13.2"] | map({python_version: .}) | {include: .}')
+          VERSIONS=$(jq -nc '["3.8.18", "3.9.15", "3.9.21", "3.10.4", "3.10.16", "3.11.0", "3.11.11", "3.12.0", "3.12.9", "3.13.0", "3.13.2"] | map({python_version: .}) | {include: .}')
           echo "python_versions=${VERSIONS}" >> $GITHUB_OUTPUT
 
   setup:
