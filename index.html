@@ -5,12 +5,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Documentation Index &#8212; Python Call Graph 2.1.2 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <title>Documentation Index &#8212; Python Call Graph 2.1.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css?v=514cf933" />
     <link rel="stylesheet" href="_static/style.css" type="text/css" />
     
-    <script src="_static/documentation_options.js?v=b3e23499"></script>
+    <script src="_static/documentation_options.js?v=179ab080"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="guide/index.html" title="Usage Guide"
              accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">Python Call Graph 2.1.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">Python Call Graph 2.1.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Documentation Index</a></li> 
       </ul>
     </div>  
@@ -43,7 +43,7 @@
 <h2>Python Call Graph<a class="headerlink" href="#python-call-graph" title="Link to this heading">¶</a></h2>
 <p>Welcome! Python Call Graph is a <a class="reference external" href="http://www.python.org">Python</a> module that creates <a class="reference external" href="http://en.wikipedia.org/wiki/Call_graph">call graph</a> visualizations for Python applications.</p>
 <p>This repo used to be <code class="docutils literal notranslate"><span class="pre">pycallgraph</span></code> which is still hosted at pypi <a class="reference external" href="https://pypi.org/project/python-call-graph/">link</a>.</p>
-<p>The uploader makes no representations of their contribution, and merely wanted this to work in python 3.5; with a goal to porting it to 3.11 and 3.12</p>
+<p>The uploader makes no representations of their contribution, and merely wanted this to work in python 3.5; with a goal to porting it to 3.11, 3.12 and 3.13</p>
 <blockquote>
 <div><p>[! NOTE]
 Please give more ideas for problems or further use-cases for this repo. I am really glad folks like it, but it’s mostly the original author work, and I don’t yet know what more to add to this.</p>
@@ -58,15 +58,15 @@ Please give more ideas for problems or further use-cases for this repo. I am rea
 </section>
 <section id="project-status">
 <h3>Project Status<a class="headerlink" href="#project-status" title="Link to this heading">¶</a></h3>
-<p>The latest version is <strong>2.1.1</strong> which was released on 2024-03-31.
-The latest version has been tested running on Python versions 3.8 - 3.12</p>
+<p>The latest version is <strong>2.1.3</strong> which was released on 2024-03-31.
+The latest version has been tested running on Python versions 3.8 - 3.13</p>
 <p>The <a class="reference external" href="https://github.com/lewiscowles1986/py-call-graph/#python-call-graph">project lives on GitHub</a>, where you can <a class="reference external" href="https://github.com/lewiscowles1986/py-call-graph/issues">report issues</a>, contribute to the project by <a class="reference external" href="https://help.github.com/articles/fork-a-repo">forking the project</a> then creating a <a class="reference external" href="https://help.github.com/articles/using-pull-requests">pull request</a>, or just <a class="reference external" href="https://github.com/lewiscowles1986/py-call-graph/">browse the source code</a>.</p>
 <p>The documentation needs some work stiil. Feel free to contribute :smile:</p>
 </section>
 <section id="features">
 <h3>Features<a class="headerlink" href="#features" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p>Support for Python 3.8 - 3.12.</p></li>
+<li><p>Support for Python 3.8 - 3.13.</p></li>
 <li><p>Static visualizations of the call graph using various tools such as Graphviz and Gephi.</p></li>
 <li><p>Execute pycallgraph from the command line or import it in your code.</p></li>
 <li><p>Customisable colors. You can programatically set the colors based on number of calls, time taken, memory usage, etc.</p></li>
@@ -90,8 +90,8 @@ The latest version has been tested running on Python versions 3.8 - 3.12</p>
 </section>
 <section id="a-simple-use-of-the-api-is">
 <h4>A simple use of the API is<a class="headerlink" href="#a-simple-use-of-the-api-is" title="Link to this heading">¶</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pycallgraph</span> <span class="kn">import</span> <span class="n">PyCallGraph</span>
-<span class="kn">from</span> <span class="nn">pycallgraph.output</span> <span class="kn">import</span> <span class="n">GraphvizOutput</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph</span><span class="w"> </span><span class="kn">import</span> <span class="n">PyCallGraph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph.output</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraphvizOutput</span>
 
 <span class="k">with</span> <span class="n">PyCallGraph</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="n">GraphvizOutput</span><span class="p">()):</span>
     <span class="n">code_to_profile</span><span class="p">()</span>
@@ -237,7 +237,7 @@ The latest version has been tested running on Python versions 3.8 - 3.12</p>
         <li class="right" >
           <a href="guide/index.html" title="Usage Guide"
              >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">Python Call Graph 2.1.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">Python Call Graph 2.1.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Documentation Index</a></li> 
       </ul>
     </div>

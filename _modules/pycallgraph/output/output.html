@@ -4,12 +4,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>pycallgraph.output.output &#8212; Python Call Graph 2.1.2 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <title>pycallgraph.output.output &#8212; Python Call Graph 2.1.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../_static/classic.css?v=514cf933" />
     <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
     
-    <script src="../../../_static/documentation_options.js?v=b3e23499"></script>
+    <script src="../../../_static/documentation_options.js?v=179ab080"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     
@@ -22,7 +22,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">Python Call Graph 2.1.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Python Call Graph 2.1.3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">pycallgraph.output.output</a></li> 
       </ul>
@@ -34,20 +34,20 @@
           <div class="body" role="main">
             
   <h1>Source code for pycallgraph.output.output</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">which</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shutil</span><span class="w"> </span><span class="kn">import</span> <span class="n">which</span>
 
-<span class="kn">from</span> <span class="nn">..exceptions</span> <span class="kn">import</span> <span class="n">PyCallGraphException</span>
-<span class="kn">from</span> <span class="nn">..color</span> <span class="kn">import</span> <span class="n">Color</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">PyCallGraphException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..color</span><span class="w"> </span><span class="kn">import</span> <span class="n">Color</span>
 
 
 <div class="viewcode-block" id="Output">
 <a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.Output">[docs]</a>
-<span class="k">class</span> <span class="nc">Output</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Output</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;Base class for all outputters.&#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node_color_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_color</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">edge_color_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_color</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node_label_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_label</span>
@@ -58,7 +58,7 @@
 
 <div class="viewcode-block" id="Output.set_config">
 <a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.Output.set_config">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        This is a quick hack to move the config variables set in Config into</span>
 <span class="sd">        the output module config variables.</span>
@@ -70,15 +70,15 @@
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">node_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">node_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">fraction</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">calls</span><span class="o">.</span><span class="n">fraction</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span>
         <span class="k">return</span> <span class="n">Color</span><span class="o">.</span><span class="n">hsv</span><span class="p">(</span><span class="n">value</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mf">.5</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">edge_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">edge_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">):</span>
         <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">fraction</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">edge</span><span class="o">.</span><span class="n">calls</span><span class="o">.</span><span class="n">fraction</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span>
         <span class="k">return</span> <span class="n">Color</span><span class="o">.</span><span class="n">hsv</span><span class="p">(</span><span class="n">value</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mf">.5</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">node_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">node_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
             <span class="s1">&#39;</span><span class="si">{0.name}</span><span class="s1">&#39;</span><span class="p">,</span>
             <span class="s1">&#39;calls: </span><span class="si">{0.calls.value:n}</span><span class="s1">&#39;</span><span class="p">,</span>
@@ -93,12 +93,12 @@
 
         <span class="k">return</span> <span class="sa">r</span><span class="s1">&#39;\n&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">edge_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">edge_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">calls</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Output.sanity_check">
 <a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.Output.sanity_check">[docs]</a>
-    <span class="k">def</span> <span class="nf">sanity_check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sanity_check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Basic checks for certain libraries or external applications.  Raise</span>
 <span class="sd">        or warn if there is a problem.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -106,25 +106,25 @@
 
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">add_arguments</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">subparsers</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_arguments</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">subparsers</span><span class="p">):</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">set_processor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processor</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_processor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processor</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">processor</span> <span class="o">=</span> <span class="n">processor</span>
 
 <div class="viewcode-block" id="Output.start">
 <a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.Output.start">[docs]</a>
-    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Initialise variables after initial configuration.&#39;&#39;&#39;</span>
         <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="Output.update">
 <a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.Output.update">[docs]</a>
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Called periodically during a trace, but only when should_update is</span>
 <span class="sd">        set to True.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -133,26 +133,26 @@
 
 <div class="viewcode-block" id="Output.should_update">
 <a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.Output.should_update">[docs]</a>
-    <span class="k">def</span> <span class="nf">should_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Return True if the update method should be called periodically.&#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="kc">False</span></div>
 
 
 <div class="viewcode-block" id="Output.done">
 <a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.Output.done">[docs]</a>
-    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Called when the trace is complete and ready to be saved.&#39;&#39;&#39;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;done&#39;</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">ensure_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ensure_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">which</span><span class="p">(</span><span class="n">cmd</span><span class="p">):</span>
             <span class="k">return</span>
 
         <span class="k">raise</span> <span class="n">PyCallGraphException</span><span class="p">(</span>
             <span class="s1">&#39;The command &quot;</span><span class="si">{0}</span><span class="s1">&quot; is required to be in your path.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">normalize_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">normalize_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="n">regex_user_expand</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\A~&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">regex_user_expand</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
             <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
@@ -160,19 +160,19 @@
             <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expandvars</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>  <span class="c1"># expand, just in case</span>
         <span class="k">return</span> <span class="n">path</span>
 
-    <span class="k">def</span> <span class="nf">prepare_output_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare_output_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_file</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fp</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_file</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">verbose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">verbose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">log_verbose</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">debug</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">debug</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">log_debug</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">add_output_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">subparser</span><span class="p">,</span> <span class="n">defaults</span><span class="p">,</span> <span class="n">help</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_output_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">subparser</span><span class="p">,</span> <span class="n">defaults</span><span class="p">,</span> <span class="n">help</span><span class="p">):</span>
         <span class="n">subparser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="s1">&#39;--output-file&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">defaults</span><span class="o">.</span><span class="n">output_file</span><span class="p">,</span>
             <span class="n">help</span><span class="o">=</span><span class="n">help</span><span class="p">,</span>
@@ -206,7 +206,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../../genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">Python Call Graph 2.1.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Python Call Graph 2.1.3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">pycallgraph.output.output</a></li> 
       </ul>

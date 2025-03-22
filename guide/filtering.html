@@ -5,12 +5,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Filtering &#8212; Python Call Graph 2.1.2 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <title>Filtering &#8212; Python Call Graph 2.1.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=514cf933" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
     
-    <script src="../_static/documentation_options.js?v=b3e23499"></script>
+    <script src="../_static/documentation_options.js?v=179ab080"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     
@@ -31,7 +31,7 @@
         <li class="right" >
           <a href="outputs.html" title="Outputs"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Usage Guide</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Filtering</a></li> 
       </ul>
@@ -48,26 +48,26 @@
 <h2>Banana<a class="headerlink" href="#banana" title="Link to this heading">¶</a></h2>
 <p>Filtering is sometimes needed when the output of Python Call Graph is overwhelming, or if you want to only measure a small portion of your program. The filtering guide below is based on the <a class="reference external" href="https://github.com/gak/pycallgraph/blob/master/examples/filter.py">filter.py</a> example.</p>
 <p>Let’s demonstrate with a class that can eat a banana:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 
 
-<span class="k">class</span> <span class="nc">Banana</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Banana</span><span class="p">:</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">eat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">secret_function</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">chew</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">swallow</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">secret_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">secret_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">chew</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chew</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">swallow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">swallow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">pass</span>
 </pre></div>
 </div>
@@ -77,10 +77,10 @@
 <p>The code to measure it without any configuration, apart from the output file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
-<span class="kn">from</span> <span class="nn">pycallgraph</span> <span class="kn">import</span> <span class="n">PyCallGraph</span>
-<span class="kn">from</span> <span class="nn">pycallgraph.output</span> <span class="kn">import</span> <span class="n">GraphvizOutput</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph</span><span class="w"> </span><span class="kn">import</span> <span class="n">PyCallGraph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph.output</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraphvizOutput</span>
 
-<span class="kn">from</span> <span class="nn">banana</span> <span class="kn">import</span> <span class="n">Banana</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">banana</span><span class="w"> </span><span class="kn">import</span> <span class="n">Banana</span>
 
 
 <span class="n">graphviz</span> <span class="o">=</span> <span class="n">GraphvizOutput</span><span class="p">(</span><span class="n">output_file</span><span class="o">=</span><span class="s1">&#39;filter_none.png&#39;</span><span class="p">)</span>
@@ -100,12 +100,12 @@
 <p>Probably need to hide that <strong>secret_function</strong>. Create a <a class="reference internal" href="../api/globbing_filter.html#globbing-filter"><span class="std std-ref">GlobbingFilter</span></a> which excludes <strong>secret_function</strong> along with <strong>pycallgraph</strong> so we don’t see the internals. Add that filter to the config option called <strong>trace_filter</strong>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
-<span class="kn">from</span> <span class="nn">pycallgraph</span> <span class="kn">import</span> <span class="n">PyCallGraph</span>
-<span class="kn">from</span> <span class="nn">pycallgraph</span> <span class="kn">import</span> <span class="n">Config</span>
-<span class="kn">from</span> <span class="nn">pycallgraph</span> <span class="kn">import</span> <span class="n">GlobbingFilter</span>
-<span class="kn">from</span> <span class="nn">pycallgraph.output</span> <span class="kn">import</span> <span class="n">GraphvizOutput</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph</span><span class="w"> </span><span class="kn">import</span> <span class="n">PyCallGraph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph</span><span class="w"> </span><span class="kn">import</span> <span class="n">GlobbingFilter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph.output</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraphvizOutput</span>
 
-<span class="kn">from</span> <span class="nn">banana</span> <span class="kn">import</span> <span class="n">Banana</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">banana</span><span class="w"> </span><span class="kn">import</span> <span class="n">Banana</span>
 
 
 <span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">()</span>
@@ -132,11 +132,11 @@
 <p>Let’s say you’re only interested in the first level of calls. You can specify this using <strong>config.max_depth</strong>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
-<span class="kn">from</span> <span class="nn">pycallgraph</span> <span class="kn">import</span> <span class="n">PyCallGraph</span>
-<span class="kn">from</span> <span class="nn">pycallgraph</span> <span class="kn">import</span> <span class="n">Config</span>
-<span class="kn">from</span> <span class="nn">pycallgraph.output</span> <span class="kn">import</span> <span class="n">GraphvizOutput</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph</span><span class="w"> </span><span class="kn">import</span> <span class="n">PyCallGraph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph.output</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraphvizOutput</span>
 
-<span class="kn">from</span> <span class="nn">banana</span> <span class="kn">import</span> <span class="n">Banana</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">banana</span><span class="w"> </span><span class="kn">import</span> <span class="n">Banana</span>
 
 
 <span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span><span class="n">max_depth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -217,7 +217,7 @@
         <li class="right" >
           <a href="outputs.html" title="Outputs"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" >Usage Guide</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Filtering</a></li> 
       </ul>
