@@ -17,13 +17,23 @@ permissions:
   contents: read
 
 jobs:
-  setup:
-    strategy:
-      matrix:
-        python_version: ["3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2"]
-      fail-fast: false
-    name: setup - Python ${{ matrix.python_version }}
+  matrix:
     runs-on: ubuntu-20.04
+    outputs:
+      python_versions: ${{ steps.set-matrix.outputs.python_versions }}
+    steps:
+      - id: set-matrix
+        run: |
+          VERSIONS=$(jq -nc '["3.8.18", "3.9.0", "3.9.21", "3.10.0", "3.10.16", "3.11.0", "3.11.11", "3.12.0", "3.12.9", "3.13.0", "3.13.2"] | map({python_version: .}) | {include: .}')
+          echo "python_versions=${VERSIONS}" >> $GITHUB_OUTPUT
+
+  setup:
+    needs: matrix
+    strategy:
+      matrix: ${{ fromJson(needs.matrix.outputs.python_versions) }}
+      fail-fast: false
+    runs-on: ubuntu-20.04
+    name: Setup - Python ${{ matrix.python_version }}
 
     steps:
     - uses: actions/checkout@v4
@@ -41,9 +51,9 @@ jobs:
   lint:
     needs:
       - setup
+      - matrix
     strategy:
-      matrix:
-        python_version: ["3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2"]
+      matrix: ${{ fromJson(needs.matrix.outputs.python_versions) }}
       fail-fast: false
     name: Lint - Python ${{ matrix.python_version }}
     runs-on: ubuntu-20.04
@@ -67,9 +77,9 @@ jobs:
   test:
     needs:
       - setup
+      - matrix
     strategy:
-      matrix:
-        python_version: ["3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2"]
+      matrix: ${{ fromJson(needs.matrix.outputs.python_versions) }}
       fail-fast: false
     name: Test - Python ${{ matrix.python_version }}
     runs-on: ubuntu-20.04
@@ -100,9 +110,9 @@ jobs:
   curated_tests:
     needs:
       - setup
+      - matrix
     strategy:
-      matrix:
-        python_version: ["3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2"]
+      matrix: ${{ fromJson(needs.matrix.outputs.python_versions) }}
       fail-fast: false
     name: Curated Tests - Python ${{ matrix.python_version }}
     runs-on: ubuntu-20.04
