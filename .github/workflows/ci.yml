@@ -1,5 +1,9 @@
 name: CI
 
+# Anchors for reuse
+x-python-matrix: &python_versions
+  python_version: ["3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2", "3.13.2"]
+
 on:
   pull_request:
   push:
@@ -19,8 +23,7 @@ permissions:
 jobs:
   setup:
     strategy:
-      matrix:
-        python_version: ["3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2", "3.13.2"]
+      matrix: *python_versions
       fail-fast: false
     name: setup - Python ${{ matrix.python_version }}
     runs-on: ubuntu-20.04
@@ -42,8 +45,7 @@ jobs:
     needs:
       - setup
     strategy:
-      matrix:
-        python_version: ["3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2", "3.13.2"]
+      matrix: *python_versions
       fail-fast: false
     name: Lint - Python ${{ matrix.python_version }}
     runs-on: ubuntu-20.04
@@ -68,8 +70,7 @@ jobs:
     needs:
       - setup
     strategy:
-      matrix:
-        python_version: ["3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2", "3.13.2"]
+      matrix: *python_versions
       fail-fast: false
     name: Test - Python ${{ matrix.python_version }}
     runs-on: ubuntu-20.04
@@ -101,8 +102,7 @@ jobs:
     needs:
       - setup
     strategy:
-      matrix:
-        python_version: ["3.8.18", "3.9.19", "3.10.14", "3.11.8", "3.12.2", "3.13.2"]
+      matrix: *python_versions
       fail-fast: false
     name: Curated Tests - Python ${{ matrix.python_version }}
     runs-on: ubuntu-20.04
