@@ -166,14 +166,13 @@ class TraceProcessor(Thread):
             module = inspect.getmodule(code)
             if module:
                 module_name = module.__name__
-                try:
+                if hasattr(module, __file__):
                     module_path = module.__file__
-
-                    if not self.config.include_stdlib \
-                            and self.is_module_stdlib(module_path):
+                    if all([
+                        not self.config.include_stdlib,
+                        module_path is not None,
+                    ]) and self.is_module_stdlib(module_path):
                         keep = False
-                except AttributeError:
-                    keep = False
 
                 if module_name == '__main__':
                     module_name = ''
