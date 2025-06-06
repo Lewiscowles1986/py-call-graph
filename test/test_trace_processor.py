@@ -58,3 +58,9 @@ def test_no_stdlib(trace_processor):
 
 def test_yes_stdlib(trace_processor):
     assert 're.match' in stdlib_trace(trace_processor, True)
+
+
+def test_module_missing_file(trace_processor):
+    sys.settrace(trace_processor.process)
+    import torch  # noqa: F401
+    sys.settrace(None)
