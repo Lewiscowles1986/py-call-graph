@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Intro &#8212; Python Call Graph 2.1.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=514cf933" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    
+    <script src="../_static/documentation_options.js?v=dc13204d"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Outputs" href="outputs.html" />
+    <link rel="prev" title="Usage Guide" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="outputs.html" title="Outputs"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Usage Guide"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Usage Guide</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Intro</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="intro">
+<h1>Intro<a class="headerlink" href="#intro" title="Link to this heading">¶</a></h1>
+<p>Python Call Graph was made to be a visual profiling tool for Python applications. It uses a debugging Python function called <a class="reference external" href="http://docs.python.org/dev/library/sys#sys.settrace">sys.set_trace()</a> which makes a callback every time your code enters or leaves function. This allows Python Call Graph to track the name of every function called, as well as which function called which, the time taken within each function, number of calls, etc.</p>
+<p>It is able to generate different types of <a class="reference internal" href="outputs.html#outputs"><span class="std std-ref">outputs and visualizations</span></a>. Initially Python Call Graph was only used to generate DOT files for <a class="reference external" href="http://graphviz.org/">GraphViz</a>, and as of version 1.0.0, it can also generate GDF files for Gephi. Creating <a class="reference internal" href="custom_outputs.html#custom-outputs"><span class="std std-ref">custom outputs</span></a> is fairly easy by subclassing the <a class="reference internal" href="../api/output.html#output"><span class="std std-ref">Output</span></a> class.</p>
+<p>You can either use the <a class="reference internal" href="command_line_usage.html#command-line-usage"><span class="std std-ref">command-line interface</span></a> for a quick visualization of your Python script, or the <a class="reference internal" href="../api/pycallgraph.html#pycallgraph"><span class="std std-ref">pycallgraph module</span></a> for more fine-grained settings.</p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>Add some examples and screenshots</p>
+</div>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">Usage Guide</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="outputs.html"
+                          title="next chapter">Outputs</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guide/intro.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="outputs.html" title="Outputs"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Usage Guide"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Usage Guide</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Intro</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2007-2024 Gerald Kaszuba, et al..
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>
