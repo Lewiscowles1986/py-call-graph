@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Command-line Usage &#8212; Python Call Graph 2.1.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=514cf933" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    
+    <script src="../_static/documentation_options.js?v=179ab080"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Custom Outputs" href="custom_outputs.html" />
+    <link rel="prev" title="Filtering" href="filtering.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="custom_outputs.html" title="Custom Outputs"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="filtering.html" title="Filtering"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Usage Guide</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Command-line Usage</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="command-line-usage">
+<span id="id1"></span><h1>Command-line Usage<a class="headerlink" href="#command-line-usage" title="Link to this heading">¶</a></h1>
+<section id="synopsis">
+<h2>Synopsis<a class="headerlink" href="#synopsis" title="Link to this heading">¶</a></h2>
+<p>pycallgraph [<em>OPTION</em>]… <em>OUTPUT_MODE</em> [<em>OUTPUT_OPTIONS</em>] <em>python_file.py</em></p>
+</section>
+<section id="description">
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">¶</a></h2>
+<p><em>OUTPUT_MODE</em> can be one of graphviz or gephi. <em>python_file.py</em> is a python script that will be traced and afterwards, a call graph visualization will be generated.</p>
+</section>
+<section id="general-arguments">
+<h2>General Arguments<a class="headerlink" href="#general-arguments" title="Link to this heading">¶</a></h2>
+<dl class="std cmdoption">
+<dt class="sig sig-object std" id="cmdoption-arg-OUTPUT_MODE">
+<span class="sig-name descname"><span class="pre">&lt;OUTPUT_MODE&gt;</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-arg-OUTPUT_MODE" title="Link to this definition">¶</a></dt>
+<dd><p>A choice of graphviz or gephi.</p>
+</dd></dl>
+
+<dl class="std cmdoption">
+<dt class="sig sig-object std" id="cmdoption-h">
+<span id="cmdoption-help"></span><span class="sig-name descname"><span class="pre">-h</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--help</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-h" title="Link to this definition">¶</a></dt>
+<dd><p>Shows a list of possible options for the command line.</p>
+</dd></dl>
+
+<dl class="std cmdoption">
+<dt class="sig sig-object std" id="cmdoption-v">
+<span id="cmdoption-verbose"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--verbose</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-v" title="Link to this definition">¶</a></dt>
+<dd><p>Turns on verbose mode which will print out information of pycallgraph’s state and processing.</p>
+</dd></dl>
+
+<dl class="std cmdoption">
+<dt class="sig sig-object std" id="cmdoption-d">
+<span id="cmdoption-debug"></span><span class="sig-name descname"><span class="pre">-d</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--debug</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-d" title="Link to this definition">¶</a></dt>
+<dd><p>Turns on debug mode which will print out debugging information such as the raw Graphviz generated files.</p>
+</dd></dl>
+
+<dl class="std cmdoption">
+<dt class="sig sig-object std" id="cmdoption-ng">
+<span id="cmdoption-no-groups"></span><span class="sig-name descname"><span class="pre">-ng</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--no-groups</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ng" title="Link to this definition">¶</a></dt>
+<dd><p>Do not group modules in the results. By default this is turned on and will visually group together methods of the same module. The technique of grouping does rely on the type of output used.</p>
+</dd></dl>
+
+<dl class="std cmdoption">
+<dt class="sig sig-object std" id="cmdoption-s">
+<span id="cmdoption-stdlib"></span><span class="sig-name descname"><span class="pre">-s</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--stdlib</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-s" title="Link to this definition">¶</a></dt>
+<dd><p>When running a trace, also include the Python standard library.</p>
+</dd></dl>
+
+<dl class="std cmdoption">
+<dt class="sig sig-object std" id="cmdoption-m">
+<span id="cmdoption-memory"></span><span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--memory</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-m" title="Link to this definition">¶</a></dt>
+<dd><p>An experimental option which includes memory tracking in the trace.</p>
+</dd></dl>
+
+<dl class="std cmdoption">
+<dt class="sig sig-object std" id="cmdoption-t">
+<span id="cmdoption-threaded"></span><span class="sig-name descname"><span class="pre">-t</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--threaded</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-t" title="Link to this definition">¶</a></dt>
+<dd><p>An experimental option which processes the trace in another thread. This may or may not be faster.</p>
+</dd></dl>
+
+</section>
+<section id="filtering-arguments">
+<h2>Filtering Arguments<a class="headerlink" href="#filtering-arguments" title="Link to this heading">¶</a></h2>
+<dl class="std cmdoption">
+<dt class="sig sig-object std" id="cmdoption-i">
+<span id="cmdoption-include"></span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--include</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;pattern&gt;</span></span><a class="headerlink" href="#cmdoption-i" title="Link to this definition">¶</a></dt>
+<dd><p>Wildcard pattern of modules to include in the output. You can have multiple include arguments.</p>
+</dd></dl>
+
+<dl class="std cmdoption">
+<dt class="sig sig-object std" id="cmdoption-e">
+<span id="cmdoption-exclude"></span><span class="sig-name descname"><span class="pre">-e</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--exclude</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;pattern&gt;</span></span><a class="headerlink" href="#cmdoption-e" title="Link to this definition">¶</a></dt>
+<dd><p>Wildcard pattern of modules to exclude in the output. You can have multiple include arguments.</p>
+</dd></dl>
+
+<dl class="std cmdoption">
+<dt class="sig sig-object std" id="cmdoption-include-pycallgraph">
+<span class="sig-name descname"><span class="pre">--include-pycallgraph</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-include-pycallgraph" title="Link to this definition">¶</a></dt>
+<dd><p>By default pycallgraph filters itself out of the trace. Enabling this will include pycallgraph in the trace.</p>
+</dd></dl>
+
+<dl class="std cmdoption">
+<dt class="sig sig-object std" id="cmdoption-max-depth">
+<span class="sig-name descname"><span class="pre">--max-depth</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-max-depth" title="Link to this definition">¶</a></dt>
+<dd><p>Maximum stack depth to trace. Any calls made past this stack depth are not included in the trace.</p>
+</dd></dl>
+
+</section>
+<section id="graphviz-arguments">
+<h2>Graphviz Arguments<a class="headerlink" href="#graphviz-arguments" title="Link to this heading">¶</a></h2>
+<dl class="std cmdoption">
+<dt class="sig sig-object std" id="cmdoption-l">
+<span id="cmdoption-tool"></span><span class="sig-name descname"><span class="pre">-l</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;tool&gt;</span></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--tool</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;tool&gt;</span></span><a class="headerlink" href="#cmdoption-l" title="Link to this definition">¶</a></dt>
+<dd><p>Modify the default Graphviz tool used by pycallgraph. It uses “dot”, but can be changed to either neato, fdp, sfdp, twopi, or circo.</p>
+</dd></dl>
+
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Create a call graph image called pycallgraph.png on myprogram.py:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pycallgraph</span> <span class="n">graphviz</span> <span class="o">--</span> <span class="o">./</span><span class="n">myprogram</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>Create a call graph of a standard Python installation script with command line parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pycallgraph</span> <span class="n">graphviz</span> <span class="o">--</span><span class="n">output</span><span class="o">-</span><span class="n">file</span><span class="o">=</span><span class="n">setup</span><span class="o">.</span><span class="n">png</span> <span class="o">--</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span> <span class="n">install</span>
+</pre></div>
+</div>
+<p>Run Django’s <em>manage.py</em> script, but since there are many calls within Django, and will cause a massively sized generated image, we can filter it to only trace the core Django modules:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pycallgraph</span> <span class="o">-</span><span class="n">v</span> <span class="o">--</span><span class="n">stdlib</span> <span class="o">--</span><span class="n">include</span> <span class="s2">&quot;django.core.*&quot;</span> <span class="n">graphviz</span> <span class="o">--</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">syncdb</span> <span class="o">--</span><span class="n">noinput</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Command-line Usage</a><ul>
+<li><a class="reference internal" href="#synopsis">Synopsis</a></li>
+<li><a class="reference internal" href="#description">Description</a></li>
+<li><a class="reference internal" href="#general-arguments">General Arguments</a></li>
+<li><a class="reference internal" href="#filtering-arguments">Filtering Arguments</a></li>
+<li><a class="reference internal" href="#graphviz-arguments">Graphviz Arguments</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="filtering.html"
+                          title="previous chapter">Filtering</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="custom_outputs.html"
+                          title="next chapter">Custom Outputs</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guide/command_line_usage.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="custom_outputs.html" title="Custom Outputs"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="filtering.html" title="Filtering"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Usage Guide</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Command-line Usage</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2007-2024 Gerald Kaszuba, et al..
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

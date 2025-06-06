@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Basic &#8212; Python Call Graph 2.1.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=514cf933" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    
+    <script src="../_static/documentation_options.js?v=179ab080"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Regular Expressions (Grouped)" href="regexp_grouped.html" />
+    <link rel="prev" title="Examples" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="regexp_grouped.html" title="Regular Expressions (Grouped)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Examples"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Examples</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Basic</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="basic">
+<span id="basic-example"></span><h1>Basic<a class="headerlink" href="#basic" title="Link to this heading">¶</a></h1>
+<p>A simple Python example with two classes.</p>
+<section id="source-code">
+<h2>Source Code<a class="headerlink" href="#source-code" title="Link to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">This example demonstrates a simple use of pycallgraph.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph</span><span class="w"> </span><span class="kn">import</span> <span class="n">PyCallGraph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph.output</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraphvizOutput</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Banana</span><span class="p">:</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">eat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Person</span><span class="p">:</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_bananas</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">no_bananas</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bananas</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_banana</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">banana</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bananas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">banana</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">eat_bananas</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="p">[</span><span class="n">banana</span><span class="o">.</span><span class="n">eat</span><span class="p">()</span> <span class="k">for</span> <span class="n">banana</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bananas</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_bananas</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">graphviz</span> <span class="o">=</span> <span class="n">GraphvizOutput</span><span class="p">()</span>
+    <span class="n">graphviz</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="s1">&#39;basic.png&#39;</span>
+
+    <span class="k">with</span> <span class="n">PyCallGraph</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="n">graphviz</span><span class="p">):</span>
+        <span class="n">person</span> <span class="o">=</span> <span class="n">Person</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+            <span class="n">person</span><span class="o">.</span><span class="n">add_banana</span><span class="p">(</span><span class="n">Banana</span><span class="p">())</span>
+        <span class="n">person</span><span class="o">.</span><span class="n">eat_bananas</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="generated-image">
+<h2>Generated Image<a class="headerlink" href="#generated-image" title="Link to this heading">¶</a></h2>
+<p>Below is the generated image from the code above. If you’re having issues with the image below, try the <a class="reference download internal" download="" href="../_downloads/727396c8499f366db2ab07d722e6e3e8/basic.png"><code class="xref download docutils literal notranslate"><span class="pre">direct</span> <span class="pre">link</span> <span class="pre">to</span> <span class="pre">image</span></code></a>.</p>
+<div class="example-image docutils container">
+<a class="reference external image-reference" href="../_downloads/basic.png"><img alt="../_images/basic.png" src="../_images/basic.png" /></a>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Basic</a><ul>
+<li><a class="reference internal" href="#source-code">Source Code</a></li>
+<li><a class="reference internal" href="#generated-image">Generated Image</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">Examples</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="regexp_grouped.html"
+                          title="next chapter">Regular Expressions (Grouped)</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/examples/basic.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="regexp_grouped.html" title="Regular Expressions (Grouped)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Examples"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Examples</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Basic</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2007-2024 Gerald Kaszuba, et al..
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>
