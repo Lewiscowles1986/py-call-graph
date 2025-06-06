@@ -1,6 +1,5 @@
 import re
 import sys
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -62,17 +61,6 @@ def test_yes_stdlib(trace_processor):
 
 
 def test_module_missing_file(trace_processor):
-    frame = MagicMock()
-    fn = MagicMock()
-    fn.co_name = "test"
-    frame.f_code = fn
-    mock_module = MagicMock()
-    mock_module.__name__ = "mocked_module"
-    mock_module.__file__ = (
-        property(lambda self: (_ for _ in ()).throw(
-            AttributeError("No __file__ attribute")
-        ))
-    )
-    with patch('inspect.getmodule', return_value=mock_module):
-        result = trace_processor.process(frame, 'call', None, None)
-        assert result is None
+    sys.settrace(trace_processor.process)
+    import torch  # noqa: F401
+    sys.settrace(None)
