@@ -110,7 +110,7 @@ class Config(object):
             help='The Python script file to profile',
         )
         parent_parser.add_argument(
-            'command_args', metavar='ARG', nargs='*',
+            'command_args', metavar='ARG', nargs=argparse.REMAINDER,
             help='Python script arguments.'
         )
         return parent_parser
