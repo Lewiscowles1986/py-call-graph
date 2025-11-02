@@ -36,7 +36,7 @@ jobs:
     name: Setup - Python ${{ matrix.python_version }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Set up Python ${{ matrix.python_version }}
       uses: actions/setup-python@v5
       with:
@@ -58,7 +58,7 @@ jobs:
     name: Lint - Python ${{ matrix.python_version }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Set up Python ${{ matrix.python_version }}
       uses: actions/setup-python@v4
       with:
@@ -84,7 +84,7 @@ jobs:
     name: Test - Python ${{ matrix.python_version }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Set up Python ${{ matrix.python_version }}
       uses: actions/setup-python@v4
       with:
@@ -117,7 +117,7 @@ jobs:
     name: Curated Tests - Python ${{ matrix.python_version }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Set up Python ${{ matrix.python_version }}
       uses: actions/setup-python@v4
       with:
