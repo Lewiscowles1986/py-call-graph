@@ -1,0 +1,37 @@
+name: Renovate
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: 0 6 1 * *
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install Renovate
+        run: npm install -g renovate
+
+      - name: Validate Renovate config
+        env:
+          LOG_LEVEL: debug
+          RENOVATE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+        run: renovate-config-validator
+
+      - name: Run Renovate
+        env:
+          LOG_LEVEL: debug
+          RENOVATE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+        run: renovate Lewiscowles1986/py-call-graph
