@@ -1,0 +1,16 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json"
+  "enabled": true,
+  "prCreation": "immediate",
+  "extends": ["config:recommended"],
+  "prConcurrentLimit": 0,
+  "branchConcurrentLimit": 0,
+  "schedule": ["at any time"],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "enabled": true,
+      "prCreation": "immediate"
+    }
+  ]
+}
