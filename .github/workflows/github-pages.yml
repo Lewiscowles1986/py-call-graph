@@ -31,7 +31,7 @@ jobs:
         run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
         id: extract_branch
       - name: Deploy to GitHub Pages (branch)
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         if: ${{ github.event_name != 'push' && github.ref != 'refs/heads/main' }}
         with:
           publish_branch: gh-pages
@@ -39,7 +39,7 @@ jobs:
           publish_dir: docs/_build/html
           destination_dir: branch/${{ steps.extract_branch.outputs.branch }}
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
           publish_branch: gh-pages
@@ -53,7 +53,7 @@ jobs:
           mkdir -p tmp/bump
           echo $(date +"%Y-%m-%dT%H%M%S") > tmp/bump/last_deploy
       - name: Force redeploy of GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
