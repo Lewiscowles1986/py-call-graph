@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v6
       - name: Install dependencies
         run: |
           pip install -r requirements/development.txt
