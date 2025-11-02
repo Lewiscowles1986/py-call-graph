@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>pycallgraph.pycallgraph &#8212; Python Call Graph 2.1.6 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../../_static/classic.css?v=514cf933" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
     
@@ -34,18 +34,18 @@
           <div class="body" role="main">
             
   <h1>Source code for pycallgraph.pycallgraph</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">locale</span>
+<span></span><span class="kn">import</span> <span class="nn">locale</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">.output</span><span class="w"> </span><span class="kn">import</span> <span class="n">Output</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.tracer</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncronousTracer</span><span class="p">,</span> <span class="n">SyncronousTracer</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">PyCallGraphException</span>
+<span class="kn">from</span> <span class="nn">.output</span> <span class="kn">import</span> <span class="n">Output</span>
+<span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">Config</span>
+<span class="kn">from</span> <span class="nn">.tracer</span> <span class="kn">import</span> <span class="n">AsyncronousTracer</span><span class="p">,</span> <span class="n">SyncronousTracer</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">PyCallGraphException</span>
 
 
 <div class="viewcode-block" id="PyCallGraph">
 <a class="viewcode-back" href="../../api/pycallgraph.html#pycallgraph.PyCallGraph">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">PyCallGraph</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">PyCallGraph</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;output can be a single Output instance or an iterable with many</span>
 <span class="sd">        of them.  Example usage:</span>
 
@@ -68,13 +68,13 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_tracer_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_tracer_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">threaded</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">AsyncronousTracer</span>
         <span class="k">else</span><span class="p">:</span>
@@ -82,7 +82,7 @@
 
 <div class="viewcode-block" id="PyCallGraph.reset">
 <a class="viewcode-back" href="../../api/pycallgraph.html#pycallgraph.PyCallGraph.reset">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Resets all collected statistics.  This is run automatically by</span>
 <span class="sd">        start(reset=True) and when the class is initialized.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -94,7 +94,7 @@
 
 <div class="viewcode-block" id="PyCallGraph.start">
 <a class="viewcode-back" href="../../api/pycallgraph.html#pycallgraph.PyCallGraph.start">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Begins a trace.  Setting reset to True will reset all previously</span>
 <span class="sd">        recorded trace data.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -115,14 +115,14 @@
 
 <div class="viewcode-block" id="PyCallGraph.stop">
 <a class="viewcode-back" href="../../api/pycallgraph.html#pycallgraph.PyCallGraph.stop">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Stops the currently running trace, if any.&#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tracer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="PyCallGraph.done">
 <a class="viewcode-back" href="../../api/pycallgraph.html#pycallgraph.PyCallGraph.done">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Stops the trace and tells the outputters to generate their</span>
 <span class="sd">        output.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -131,18 +131,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># If in threaded mode, wait for the processor thread to complete</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tracer</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
 
         <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
             <span class="n">output</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">add_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">prepare_output</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">prepare_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">prepare_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
         <span class="n">output</span><span class="o">.</span><span class="n">sanity_check</span><span class="p">()</span>
         <span class="n">output</span><span class="o">.</span><span class="n">set_processor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracer</span><span class="o">.</span><span class="n">processor</span><span class="p">)</span>
         <span class="n">output</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span></div>

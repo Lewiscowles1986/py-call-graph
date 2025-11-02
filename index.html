@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Documentation Index &#8212; Python Call Graph 2.1.6 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css?v=514cf933" />
     <link rel="stylesheet" href="_static/style.css" type="text/css" />
     
@@ -90,8 +90,8 @@ The latest version has been tested running on Python versions 3.8 - 3.13</p>
 </section>
 <section id="a-simple-use-of-the-api-is">
 <h4>A simple use of the API is<a class="headerlink" href="#a-simple-use-of-the-api-is" title="Link to this heading">¶</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph</span><span class="w"> </span><span class="kn">import</span> <span class="n">PyCallGraph</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pycallgraph.output</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraphvizOutput</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pycallgraph</span> <span class="kn">import</span> <span class="n">PyCallGraph</span>
+<span class="kn">from</span> <span class="nn">pycallgraph.output</span> <span class="kn">import</span> <span class="n">GraphvizOutput</span>
 
 <span class="k">with</span> <span class="n">PyCallGraph</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="n">GraphvizOutput</span><span class="p">()):</span>
     <span class="n">code_to_profile</span><span class="p">()</span>
