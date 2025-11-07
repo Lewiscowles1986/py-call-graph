@@ -93,7 +93,7 @@ class Output(object):
         if which(cmd):
             return
 
-        pkg_str = f" {pkg}" if pkg else ""
+        pkg_str = f" from {pkg}" if pkg else ""
         raise PyCallGraphException(
             f'The command "{cmd}"{pkg_str} is required to be in your path.'
         )
