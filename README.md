@@ -4,7 +4,7 @@ Welcome! Python Call Graph is a [Python](http://www.python.org) module that crea
 
 This repo used to be `pycallgraph` which is still hosted at pypi [link](https://pypi.org/project/python-call-graph/).
 
-The uploader makes no representations of their contribution, and merely wanted this to work in python 3.5; with a goal to porting it to 3.11, 3.12 and 3.13
+The uploader makes no representations of their contribution, and merely wanted this to work in python 3.5; with a goal to porting it to 3.11, 3.12, 3.13 and 3.14
 
 > [! NOTE]
 > Please give more ideas for problems or further use-cases for this repo. I am really glad folks like it, but it's mostly the original author work, and I don't yet know what more to add to this.
