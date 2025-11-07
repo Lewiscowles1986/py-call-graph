@@ -15,6 +15,7 @@ class GraphvizOutput(Output):
 
     def __init__(self, **kwargs):
         self.tool = 'dot'
+        self.tool_package = 'graphviz'
         self.output_file = 'pycallgraph.png'
         self.output_type = 'png'
         self.font_name = 'Verdana'
@@ -62,7 +63,7 @@ class GraphvizOutput(Output):
         )
 
     def sanity_check(self):
-        self.ensure_binary(self.tool)
+        self.ensure_binary(self.tool, self.tool_package)
 
     def prepare_graph_attributes(self):
         generated_message = '\\n'.join([

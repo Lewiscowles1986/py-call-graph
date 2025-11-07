@@ -89,12 +89,14 @@ class Output(object):
         '''Called when the trace is complete and ready to be saved.'''
         raise NotImplementedError('done')
 
-    def ensure_binary(self, cmd):
+    def ensure_binary(self, cmd: str, pkg: str|None = None):
         if which(cmd):
             return
 
+        pkg_str = f" {pkg}" if pkg else ""
         raise PyCallGraphException(
-            'The command "{0}" is required to be in your path.'.format(cmd))
+            f'The command "{cmd}"{pkg_str} is required to be in your path.'
+        )
 
     def normalize_path(self, path):
         regex_user_expand = re.compile(r'\A~')
