@@ -1,6 +1,7 @@
 import re
 import os
 from shutil import which
+from typing import Optional
 
 from ..exceptions import PyCallGraphException
 from ..color import Color
@@ -89,12 +90,14 @@ class Output(object):
         '''Called when the trace is complete and ready to be saved.'''
         raise NotImplementedError('done')
 
-    def ensure_binary(self, cmd):
+    def ensure_binary(self, cmd: str, pkg: Optional[str] = None):
         if which(cmd):
             return
 
+        pkg_str = f" from {pkg}" if pkg else ""
         raise PyCallGraphException(
-            'The command "{0}" is required to be in your path.'.format(cmd))
+            f'The command "{cmd}"{pkg_str} is required to be in your path.'
+        )
 
     def normalize_path(self, path):
         regex_user_expand = re.compile(r'\A~')
