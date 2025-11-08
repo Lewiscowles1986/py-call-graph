@@ -37,6 +37,7 @@
 <span></span><span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">which</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="kn">from</span> <span class="nn">..exceptions</span> <span class="kn">import</span> <span class="n">PyCallGraphException</span>
 <span class="kn">from</span> <span class="nn">..color</span> <span class="kn">import</span> <span class="n">Color</span>
@@ -145,12 +146,14 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;done&#39;</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">ensure_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">ensure_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pkg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">which</span><span class="p">(</span><span class="n">cmd</span><span class="p">):</span>
             <span class="k">return</span>
 
+        <span class="n">pkg_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; from </span><span class="si">{</span><span class="n">pkg</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">pkg</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
         <span class="k">raise</span> <span class="n">PyCallGraphException</span><span class="p">(</span>
-            <span class="s1">&#39;The command &quot;</span><span class="si">{0}</span><span class="s1">&quot; is required to be in your path.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
+            <span class="sa">f</span><span class="s1">&#39;The command &quot;</span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s1">&quot;</span><span class="si">{</span><span class="n">pkg_str</span><span class="si">}</span><span class="s1"> is required to be in your path.&#39;</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">normalize_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="n">regex_user_expand</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\A~&#39;</span><span class="p">)</span>
