@@ -12,5 +12,21 @@
       "enabled": true,
       "prCreation": "immediate"
     }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
+      "datasourceTemplate": "github-tags",
+      "depNameTemplate": "actions/setup-python",
+      "versioningTemplate": "pep440",
+      "matchStrings": [
+        // Match the python-version input
+        "python-version:\\s*(?<currentValue>\\d+\\.\\d+)",
+
+        // Match & update name labels like: "Set up Python 3.11"
+        "Set up Python\\s+(?<currentValue>\\d+\\.\\d+)"
+      ]
+    }
   ]
 }
