@@ -16,7 +16,7 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
+      "managerFilePatterns": ["/^\\.github/workflows/.*\\.ya?ml$/"],
       "datasourceTemplate": "github-tags",
       "depNameTemplate": "actions/setup-python",
       "versioningTemplate": "pep440",
