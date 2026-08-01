@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>PyCallGraph — Main interface to Python Call Graph &#8212; Python Call Graph 2.1.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=514cf933" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    
+    <script src="../_static/documentation_options.js?v=4f932e3e"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="output.Output — Base class for all output modules" href="output.html" />
+    <link rel="prev" title="API Classes" href="api.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="output.html" title="output.Output — Base class for all output modules"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API Classes"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" accesskey="U">API Classes</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-class docutils literal notranslate"><span class="pre">PyCallGraph</span></code> — Main interface to Python Call Graph</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="pycallgraph-main-interface-to-python-call-graph">
+<span id="pycallgraph"></span><h1><code class="xref py py-class docutils literal notranslate"><span class="pre">PyCallGraph</span></code> — Main interface to Python Call Graph<a class="headerlink" href="#pycallgraph-main-interface-to-python-call-graph" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="pycallgraph.PyCallGraph">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pycallgraph.</span></span><span class="sig-name descname"><span class="pre">PyCallGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/pycallgraph.html#PyCallGraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.PyCallGraph" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.PyCallGraph.done">
+<span class="sig-name descname"><span class="pre">done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/pycallgraph.html#PyCallGraph.done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.PyCallGraph.done" title="Link to this definition">¶</a></dt>
+<dd><p>Stops the trace and tells the outputters to generate their
+output.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.PyCallGraph.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/pycallgraph.html#PyCallGraph.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.PyCallGraph.reset" title="Link to this definition">¶</a></dt>
+<dd><p>Resets all collected statistics.  This is run automatically by
+start(reset=True) and when the class is initialized.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.PyCallGraph.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/pycallgraph.html#PyCallGraph.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.PyCallGraph.start" title="Link to this definition">¶</a></dt>
+<dd><p>Begins a trace.  Setting reset to True will reset all previously
+recorded trace data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.PyCallGraph.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/pycallgraph.html#PyCallGraph.stop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.PyCallGraph.stop" title="Link to this definition">¶</a></dt>
+<dd><p>Stops the currently running trace, if any.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyCallGraph</span></code> — Main interface to Python Call Graph</a><ul>
+<li><a class="reference internal" href="#pycallgraph.PyCallGraph"><code class="docutils literal notranslate"><span class="pre">PyCallGraph</span></code></a><ul>
+<li><a class="reference internal" href="#pycallgraph.PyCallGraph.done"><code class="docutils literal notranslate"><span class="pre">PyCallGraph.done()</span></code></a></li>
+<li><a class="reference internal" href="#pycallgraph.PyCallGraph.reset"><code class="docutils literal notranslate"><span class="pre">PyCallGraph.reset()</span></code></a></li>
+<li><a class="reference internal" href="#pycallgraph.PyCallGraph.start"><code class="docutils literal notranslate"><span class="pre">PyCallGraph.start()</span></code></a></li>
+<li><a class="reference internal" href="#pycallgraph.PyCallGraph.stop"><code class="docutils literal notranslate"><span class="pre">PyCallGraph.stop()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="api.html"
+                          title="previous chapter">API Classes</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="output.html"
+                          title="next chapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">output.Output</span></code> — Base class for all output modules</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/pycallgraph.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="output.html" title="output.Output — Base class for all output modules"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API Classes"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" >API Classes</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-class docutils literal notranslate"><span class="pre">PyCallGraph</span></code> — Main interface to Python Call Graph</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2007-2024 Gerald Kaszuba, et al..
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>
