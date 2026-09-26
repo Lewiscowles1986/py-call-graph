@@ -9,7 +9,7 @@ __copyright__ = 'Copyright Gerald Kaszuba 2007-2025'
 __license__ = 'GPL-2.0-or-later'
 __author__ = 'Gerald Kaszuba'
 __email__ = 'pycallgraph@gakman.com'
-__url__ = 'http://pycallgraph.readthedocs.io/'
+__url__ = 'https://github.com/Lewiscowles1986/py-call-graph'
 __credits__ = [
     'Gerald Kaszuba',
     'Lewis Cowles',

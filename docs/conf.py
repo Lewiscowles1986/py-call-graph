@@ -223,7 +223,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('guide/command_line_usage', 'pycallgraph', u'Python Call Graph',
-    	['''pycallgraph was written by Gerald Kaszuba <pycallgraph@slowchop.com>.
+    	['''pycallgraph was written by Gerald Kaszuba <pycallgraph@gakman.com>.
 
 This manual page was originally written by Jan Alonzo <jmalonzo@unpluggable.com>, for the Debian GNU/Linux system.
 '''], 1)
