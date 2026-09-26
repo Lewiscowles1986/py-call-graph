@@ -15,6 +15,8 @@ from .metadata import __credits__
 
 from .pycallgraph import PyCallGraph
 from .exceptions import PyCallGraphException
+from .tracer import SyncronousTracer, AsyncronousTracer
+from .tracer import SynchronousTracer, AsynchronousTracer
 from . import decorators
 from .config import Config
 from .globbing_filter import GlobbingFilter

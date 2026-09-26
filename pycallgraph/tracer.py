@@ -107,6 +107,14 @@ class SyncronousTracer(object):
         pass
 
 
+# The historical class names misspell "Synchronous"/"Asynchronous", but they
+# are public: they are importable from pycallgraph.tracer, returned by
+# PyCallGraph.get_tracer_class() and used as headings in the API docs, so
+# renaming them would break callers. The correctly spelled names are provided
+# as aliases instead, and both refer to the same class object.
+SynchronousTracer = SyncronousTracer
+
+
 class AsyncronousTracer(SyncronousTracer):
 
     #: How long to wait for the trace processor to drain and exit. A stuck
@@ -131,6 +139,9 @@ class AsyncronousTracer(SyncronousTracer):
                 '{0} seconds. The trace is incomplete; try running without '
                 'threaded tracing.'.format(self.shutdown_timeout)
             )
+
+
+AsynchronousTracer = AsyncronousTracer
 
 
 class TraceProcessor(Thread):
