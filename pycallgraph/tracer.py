@@ -1,5 +1,3 @@
-
-
 import inspect
 import os
 import sys
@@ -230,6 +228,9 @@ class TraceProcessor(Thread):
             # Create a readable representation of the current call
             full_name = '.'.join(full_name_list)
 
+            # Note: call_stack is initialized with ['__main__'].
+            # max_depth defines the maximum call depth where direct callees of
+            # __main__ are at depth 1 (len(call_stack) == 1 when the call event occurs).
             if len(self.call_stack) > self.config.max_depth:
                 keep = False
 
