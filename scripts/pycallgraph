@@ -1,26 +1,18 @@
 #!/usr/bin/env python
-"""
+'''
 pycallgraph
 This script is the command line interface to the pycallgraph Python library.
 
-See http://pycallgraph.slowchop.com/ for more information.
-"""
-import sys
+See https://github.com/Lewiscowles1986/py-call-graph for more information.
+'''
 import os
+import sys
 
-import pycallgraph as __pycallgraph
-
-
-# Inject the current working directory so modules can be imported.
+# Inject the current working directory so the target script's imports resolve.
 sys.path.insert(0, os.getcwd())
 
-__config = __pycallgraph.Config()
-__config.parse_args()
-__config.strip_argv()
+from pycallgraph.cli import main  # noqa: E402
 
-globals()['__file__'] = __config.command
 
-__file_content = open(__config.command).read()
-
-with __pycallgraph.PyCallGraph(config=__config):
-    exec(__file_content)
+if __name__ == '__main__':
+    sys.exit(main())
