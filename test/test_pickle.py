@@ -22,6 +22,7 @@ import pytest
 
 from pycallgraph import PyCallGraph
 from pycallgraph.tracer import TraceProcessor
+from pycallgraph.output import outputters
 from pycallgraph.output.pickle import PickleOutput
 from calls import one_nop
 
@@ -70,6 +71,49 @@ def test_pickle_output_omits_unpicklable_state(pickle_output):
 
     for attribute in ('outputs', 'config', 'updatables', 'lib_paths'):
         assert not hasattr(loaded, attribute)
+
+
+def test_pickle_output_is_selectable_from_the_command_line(temp):
+    '''
+    The output class existed but was never registered, so the documented
+    'pickle' output mode was rejected by the argument parser. Guard against
+    it silently becoming unreachable again.
+    '''
+    assert 'pickle' in outputters
+
+    script_path = temp + '.py'
+    with open(script_path, 'w') as handle:
+        handle.write(
+            'def nop():\n'
+            '    pass\n'
+            '\n'
+            'def one_nop():\n'
+            '    nop()\n'
+            '\n'
+            'one_nop()\n'
+        )
+
+    env = dict(os.environ)
+    env['PYTHONPATH'] = REPO_ROOT
+    result = subprocess.run(
+        [
+            sys.executable,
+            os.path.join(REPO_ROOT, 'scripts', 'pycallgraph'),
+            'pickle', '-o', temp,
+            '--', script_path,
+        ],
+        cwd=REPO_ROOT, env=env,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+    )
+    assert result.returncode == 0, result.stdout
+
+    with open(temp, 'rb') as handle:
+        loaded = pickle.load(handle)
+
+    # The script is exec'd by the CLI, so its functions have no module prefix.
+    assert loaded.func_count['one_nop'] == 1
+    assert loaded.func_count['nop'] == 1
+    assert loaded.call_dict['one_nop']['nop'] == 1
 
 
 def test_pickle_output_loads_in_a_fresh_interpreter(pickle_output):

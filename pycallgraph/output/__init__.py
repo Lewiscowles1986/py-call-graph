@@ -12,5 +12,6 @@ outputters = collections.OrderedDict([
     ('graphviz', GraphvizOutput),
     ('gephi', GephiOutput),
     ('json', JSONOutput),
+    ('pickle', PickleOutput),
     # ('ubigraph', UbigraphOutput),
 ])
