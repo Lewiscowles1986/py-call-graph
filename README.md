@@ -24,7 +24,7 @@ Click on the images below to see a larger version and the source code that gener
 ## Project Status
 
 The latest version is **2.1.6** which was released on 2025-06-06.
-The latest version has been tested running on Python versions 3.8 - 3.13
+The latest version has been tested running on Python versions 3.8 - 3.14
 
 The [project lives on GitHub](https://github.com/lewiscowles1986/py-call-graph/#python-call-graph), where you can [report issues](https://github.com/lewiscowles1986/py-call-graph/issues), contribute to the project by [forking the project](https://help.github.com/articles/fork-a-repo) then creating a [pull request](https://help.github.com/articles/using-pull-requests), or just [browse the source code](https://github.com/lewiscowles1986/py-call-graph/).
 
@@ -32,7 +32,7 @@ The documentation needs some work stiil. Feel free to contribute :smile:
 
 ## Features
 
-* Support for Python 3.8 - 3.13.
+* Support for Python 3.8 - 3.14.
 * Static visualizations of the call graph using various tools such as Graphviz and Gephi.
 * Execute pycallgraph from the command line or import it in your code.
 * Customisable colors. You can programatically set the colors based on number of calls, time taken, memory usage, etc.
@@ -73,3 +73,36 @@ with PyCallGraph(output=GraphvizOutput()):
 ## Documentation
 
 Feel free to browse the [documentation of pycallgraph](https://lewiscowles1986.github.io/py-call-graph/) for the [usage guide](https://lewiscowles1986.github.io/py-call-graph/guide/index.html) and [API reference](https://lewiscowles1986.github.io/py-call-graph/api/api.html).
+
+## Contributing and maintenance
+
+Everything a maintainer needs is in one place so the workflow does not depend
+on tribal knowledge:
+
+* **Run the tests** (Python 3.8 - 3.14):
+
+  ```shell
+  pip install -r requirements/development.txt
+  PYTHONPATH=$(pwd) pytest --ignore=pycallgraph/memory_profiler.py test pycallgraph examples
+  ```
+
+  The Graphviz tests need the `dot` binary (`apt install graphviz` /
+  `brew install graphviz`). `test/test_packaging.py` builds a real sdist.
+* **Lint**, matching CI:
+
+  ```shell
+  flake8 --exclude=__init__.py,memory_profiler.py pycallgraph
+  flake8 --ignore=F403 test
+  flake8 examples
+  ```
+* **Build and release**: `python setup.py sdist` produces the distribution;
+  publishing happens automatically from a published GitHub release
+  (`.github/workflows/release.yml`). The version lives only in
+  `pycallgraph/metadata.py`.
+* **Add an output format** by subclassing `pycallgraph.output.Output`,
+  implementing `done()` (and optionally `generate()`), then registering it in
+  the `outputters` map in `pycallgraph/output/__init__.py`. The JSON output is a
+  small, self-contained example.
+* **Document new behaviour** in `docs/`; the man page is generated from
+  `docs/guide/command_line_usage.rst`.
+

@@ -135,7 +135,8 @@ class Config(object):
         self.parser.add_argument(
             '-s', '--stdlib', dest='include_stdlib', action='store_true',
             default=self.include_stdlib,
-            help='Include standard library functions in the trace')
+            help='Include standard library and installed (site-packages) '
+                 'functions in the trace')
 
         self.parser.add_argument(
             '-m', '--memory', action='store_true', default=self.memory,

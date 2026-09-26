@@ -8,8 +8,12 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Every branch preview deploys to the same gh-pages branch, so they must
+  # share one concurrency group. Keying on github.ref (the default) let two
+  # previews push at once, and the loser failed with:
+  #   cannot lock ref 'refs/heads/gh-pages': is at <a> but expected <b>
+  group: ${{ github.workflow }}-gh-pages
+  cancel-in-progress: false
 
 permissions:
   contents: write
