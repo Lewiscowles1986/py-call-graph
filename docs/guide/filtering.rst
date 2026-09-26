@@ -4,7 +4,7 @@ Filtering
 Banana
 ------
 
-Filtering is sometimes needed when the output of Python Call Graph is overwhelming, or if you want to only measure a small portion of your program. The filtering guide below is based on the `filter.py <https://github.com/Lewiscowles1986/py-call-graph/blob/master/examples/filter.py>`_ example.
+Filtering is sometimes needed when the output of Python Call Graph is overwhelming, or if you want to only measure a small portion of your program. The filtering guide below is based on the `filter.py <https://github.com/Lewiscowles1986/py-call-graph/blob/main/examples/graphviz/filter.py>`_ example.
 
 Let's demonstrate with a class that can eat a banana:
 

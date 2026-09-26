@@ -5,11 +5,55 @@ import os
 import sys
 import sysconfig
 import time
+import warnings
 from collections import defaultdict
 from queue import Queue, Empty
 from threading import Thread
 
 from .util import Util
+from .grouper import Grouper
+from .exceptions import PyCallGraphException
+
+
+#: Sentinel placed on the trace queue to tell the processor thread that
+#: everything queued before it has been processed and it should exit.
+_SHUTDOWN = object()
+
+
+def _empty_int_dict():
+    '''Module-level factory so the call graph default can be pickled.'''
+    return defaultdict(int)
+
+
+class ProcessedTraceConfig(object):
+    '''The subset of configuration a *restored* trace still needs.
+
+    Outputs read a handful of settings off ``processor.config`` while
+    rendering (grouping, memory labels, verbosity). A live processor gets a
+    full ``Config``, but that object holds an ``argparse`` parser and cannot
+    be pickled. A dump therefore stores this small, picklable stand-in so a
+    trace loaded later can still be rendered without the original process.
+    '''
+
+    def __init__(self, config=None):
+        if config is not None:
+            self.groups = getattr(config, 'groups', True)
+            self.trace_grouper = getattr(config, 'trace_grouper', Grouper())
+            self.memory = getattr(config, 'memory', False)
+        else:
+            self.groups = True
+            self.trace_grouper = Grouper()
+            self.memory = False
+        self.verbose = False
+        self.debug = False
+
+    def log_verbose(self, text):
+        if self.verbose:
+            print(text)
+
+    def log_debug(self, text):
+        if self.debug:
+            print(text)
 
 
 class SyncronousTracer(object):
@@ -17,15 +61,41 @@ class SyncronousTracer(object):
     def __init__(self, outputs, config):
         self.processor = TraceProcessor(outputs, config)
         self.config = config
+        # Set once this tracer has reported that the memory backend cannot
+        # measure, so the warning is not repeated for every traced event.
+        self._memory_backend_warned = False
 
     def tracer(self, frame, event, arg):
         self.processor.process(frame, event, arg, self.memory())
         return self.tracer
 
     def memory(self):
-        if self.config.memory:
-            from .memory_profiler import memory_usage
-            return int(memory_usage(-1, 0)[0] * 1000000)
+        '''Return the current memory usage in bytes, or None if disabled.
+
+        A negative reading from ``memory_usage`` means "could not measure"
+        (for example ``ps v`` on macOS has no RSS column). That is reported as
+        ``None`` so it is not published as a real, negative figure, and the
+        reason is logged once rather than on every traced event.
+        '''
+        if not self.config.memory:
+            return None
+
+        from .memory_profiler import memory_usage
+
+        sample = memory_usage(-1, 0)[0]
+        if sample < 0:
+            if not self._memory_backend_warned:
+                self._memory_backend_warned = True
+                warnings.warn(
+                    'Memory usage could not be measured on this platform: the '
+                    'memory backend returned -1, which usually means the '
+                    'psutil module is missing and no usable ps backend is '
+                    'available. Memory statistics will be omitted. Installing '
+                    'psutil may help.'
+                )
+            return None
+
+        return int(sample * 1000000)
 
     def start(self):
         sys.settrace(self.tracer)
@@ -37,7 +107,19 @@ class SyncronousTracer(object):
         pass
 
 
+# The historical class names misspell "Synchronous"/"Asynchronous", but they
+# are public: they are importable from pycallgraph.tracer, returned by
+# PyCallGraph.get_tracer_class() and used as headings in the API docs, so
+# renaming them would break callers. The correctly spelled names are provided
+# as aliases instead, and both refer to the same class object.
+SynchronousTracer = SyncronousTracer
+
+
 class AsyncronousTracer(SyncronousTracer):
+
+    #: How long to wait for the trace processor to drain and exit. A stuck
+    #: processor used to block the traced program forever with no diagnostics.
+    shutdown_timeout = 10.0
 
     def start(self):
         self.processor.start()
@@ -49,7 +131,17 @@ class AsyncronousTracer(SyncronousTracer):
 
     def done(self):
         self.processor.done()
-        self.processor.join()
+        self.processor.join(self.shutdown_timeout)
+
+        if self.processor.is_alive():
+            raise PyCallGraphException(
+                'The threaded trace processor did not finish within '
+                '{0} seconds. The trace is incomplete; try running without '
+                'threaded tracing.'.format(self.shutdown_timeout)
+            )
+
+
+AsynchronousTracer = AsyncronousTracer
 
 
 class TraceProcessor(Thread):
@@ -58,8 +150,27 @@ class TraceProcessor(Thread):
     function call count, time taken, etc.
     '''
 
+    # The subset of state that is meaningful once a trace has finished and
+    # that can safely be pickled. Runtime-only threading state, the open
+    # outputs and the config are deliberately excluded. Keep this in sync
+    # with the counters set up in init_trace_data (see test_pickle.py).
+    _picklable_state = (
+        'call_stack',
+        'func_count',
+        'func_count_max',
+        'func_time',
+        'func_time_max',
+        'func_memory_in',
+        'func_memory_in_max',
+        'func_memory_out',
+        'func_memory_out_max',
+    )
+
     def __init__(self, outputs, config):
-        Thread.__init__(self)
+        # Daemon so a trace that is never cleanly finished cannot keep the
+        # interpreter alive at exit. A normal run still joins the processor in
+        # AsyncronousTracer.done() before outputs are generated.
+        Thread.__init__(self, daemon=True)
         self.trace_queue = Queue()
         self.keep_going = True
         self.outputs = outputs
@@ -70,8 +181,6 @@ class TraceProcessor(Thread):
         self.init_libpath()
 
     def init_trace_data(self):
-        self.previous_event_return = False
-
         # A mapping of which function called which other function
         self.call_dict = defaultdict(lambda: defaultdict(int))
 
@@ -99,6 +208,12 @@ class TraceProcessor(Thread):
         self.call_stack_timer = []
         self.call_stack_memory_in = []
         self.call_stack_memory_out = []
+
+        # Frames that were actually pushed, one per entry of call_stack after
+        # the initial '__main__'. Needed to recognise a generator resumption:
+        # sys.settrace emits a 'call' event every time a generator is resumed,
+        # and the same frame object is reused.
+        self.call_stack_frames = []
 
     def init_libpath(self):
         '''Work out the directories which contain library (non-user) code.
@@ -136,7 +251,7 @@ class TraceProcessor(Thread):
 
         # Cache of file name -> bool. is_module_stdlib runs for every 'call'
         # event, and each miss costs syscalls (lstat/readlink in realpath), so
-        # results are memoized exactly as inspect.getmodule is above.
+        # results are memoized by the same idea as _module_for_code above.
         self.is_stdlib_cache = {}
 
     def queue(self, frame, event, arg, memory):
@@ -149,52 +264,74 @@ class TraceProcessor(Thread):
         self.trace_queue.put(data)
 
     def run(self):
-        while self.keep_going:
+        while True:
             try:
                 data = self.trace_queue.get(timeout=0.1)
             except Empty:
-                pass
+                # Nothing to process yet. If shutdown has been requested and
+                # the queue is genuinely empty, the backlog is drained.
+                if not self.keep_going:
+                    break
+                continue
+
+            if data is _SHUTDOWN:
+                # Sentinel: everything queued before this has been processed.
+                break
+
             self.process(**data)
 
     def done(self):
-        while not self.trace_queue.empty():
-            time.sleep(0.1)
+        '''Ask the processor to finish and exit.
+
+        Everything already queued is still processed, then the worker exits
+        on the sentinel. This replaces a busy-wait on ``queue.empty()`` that
+        spun forever if the worker had already stopped.
+        '''
         self.keep_going = False
+        self.trace_queue.put(_SHUTDOWN)
 
     def process(self, frame, event, arg, memory=None):
         '''This function processes a trace result. Keeps track of
         relationships between calls.
         '''
 
-        if memory is not None and self.previous_event_return:
-            # Deal with memory when function has finished so local variables
-            # can be cleaned up
-            self.previous_event_return = False
-
-            if self.call_stack_memory_out:
-                full_name, m = self.call_stack_memory_out.pop(-1)
-            else:
-                full_name, m = (None, None)
-
-            # NOTE: Call stack is no longer the call stack that may be
-            # expected. Potentially need to store a copy of it.
-            if full_name and m:
-                call_memory = memory - m
-
-                self.func_memory_out[full_name] += call_memory
-                self.func_memory_out_max = max(
-                    self.func_memory_out_max, self.func_memory_out[full_name]
-                )
-
         if event == 'call':
             keep = True
             code = frame.f_code
+
+            is_generator = bool(
+                getattr(code, 'co_flags', 0) & inspect.CO_GENERATOR)
+
+            # Resuming a generator emits another 'call' event for the *same*
+            # frame. That is not a new invocation, so do not push or count it
+            # again -- just re-arm the timer for the next segment.
+            if is_generator and self.call_stack_frames \
+                    and self.call_stack_frames[-1] is frame:
+                if self.call_stack_timer:
+                    self.call_stack_timer[-1] = time.perf_counter()
+                return
+
+            # Align the stack with the real call chain before recording this
+            # frame. A generator that is left suspended, or one that is still
+            # being consumed, can leave frames above the caller; without this
+            # the next edge is attributed to the wrong function.
+            caller_frame = getattr(frame, 'f_back', None)
+            if caller_frame is not None:
+                while self.call_stack_frames and \
+                        self.call_stack_frames[-1] is not caller_frame:
+                    self.call_stack.pop(-1)
+                    self.call_stack_timer.pop(-1)
+                    self.call_stack_frames.pop(-1)
+                    if self.call_stack_memory_in:
+                        self.call_stack_memory_in.pop(-1)
+                    if self.call_stack_memory_out:
+                        self.call_stack_memory_out.pop(-1)
 
             # Stores all the parts of a human readable name of the current call
             full_name_list = []
 
             # Work out the module name
-            module = inspect.getmodule(code)
+            module = _module_for_code(code)
             if module:
                 module_name = module.__name__
                 try:
@@ -254,30 +391,55 @@ class TraceProcessor(Thread):
                 )
 
                 self.call_stack.append(full_name)
-                self.call_stack_timer.append(time.time())
+                self.call_stack_timer.append(time.perf_counter())
+                self.call_stack_frames.append(frame)
 
                 if memory is not None:
                     self.call_stack_memory_in.append(memory)
                     self.call_stack_memory_out.append([full_name, memory])
 
             else:
+                # Keep all four stacks in step so a return can pop them
+                # positionally. Filtered frames push sentinels onto every
+                # stack; previously the memory stacks were skipped, which
+                # attributed memory to the wrong function whenever --memory
+                # was combined with a filter or --max-depth.
                 self.call_stack.append('')
                 self.call_stack_timer.append(None)
+                self.call_stack_frames.append(frame)
+
+                if memory is not None:
+                    self.call_stack_memory_in.append(None)
+                    self.call_stack_memory_out.append(None)
 
         if event == 'return':
 
-            self.previous_event_return = True
+            # Re-arm rather than pop: a generator resumption will follow with
+            # a 'call' event for this same frame.
+            yielding = False
+            if arg is not None and self.call_stack_frames \
+                    and self.call_stack_frames[-1] is frame:
+                yielding = True
 
-            if self.call_stack:
+            if not yielding and self.call_stack:
+                if self.call_stack_frames:
+                    self.call_stack_frames.pop(-1)
+
                 full_name = self.call_stack.pop(-1)
 
+                # A frame returns control to its *caller* (frame.f_back), not
+                # necessarily to whatever is on top of the stack: a generator
+                # that is left suspended, or one that is still being consumed,
+                # can strand frames above its caller. Rewinding to f_back keeps
+                # the stack honest and stops the next edge being attributed to
+                # the wrong caller.
                 if self.call_stack_timer:
                     start_time = self.call_stack_timer.pop(-1)
                 else:
                     start_time = None
 
                 if start_time:
-                    call_time = time.time() - start_time
+                    call_time = time.perf_counter() - start_time
 
                     self.func_time[full_name] += call_time
                     self.func_time_max = max(
@@ -285,12 +447,15 @@ class TraceProcessor(Thread):
                     )
 
                 if memory is not None:
+                    # Pop unconditionally so the stacks cannot drift. An entry
+                    # is None for a filtered frame; a measured value of 0 is a
+                    # real reading and must not be treated as "no data".
                     if self.call_stack_memory_in:
                         start_mem = self.call_stack_memory_in.pop(-1)
                     else:
                         start_mem = None
 
-                    if start_mem:
+                    if start_mem is not None:
                         call_memory = memory - start_mem
                         self.func_memory_in[full_name] += call_memory
 
@@ -298,6 +463,24 @@ class TraceProcessor(Thread):
                             self.func_memory_in_max,
                             self.func_memory_in[full_name],
                         )
+
+                    if self.call_stack_memory_out:
+                        entry = self.call_stack_memory_out.pop(-1)
+                    else:
+                        entry = None
+
+                    # Compute memory-out here, at return time, rather than
+                    # relying on a global flag tied to the previous event,
+                    # which desynchronised the stack when a reading was 0.
+                    if entry is not None:
+                        out_name, out_mem = entry
+                        if out_mem is not None:
+                            out_memory = memory - out_mem
+                            self.func_memory_out[out_name] += out_memory
+                            self.func_memory_out_max = max(
+                                self.func_memory_out_max,
+                                self.func_memory_out[out_name],
+                            )
 
     def is_module_stdlib(self, file_name):
         '''
@@ -327,21 +510,32 @@ class TraceProcessor(Thread):
         return result
 
     def __getstate__(self):
-        '''Used for when creating a pickle. Certain instance variables can't
-        pickled and aren't used anyway.
-        '''
-        odict = self.__dict__.copy()
-        dont_keep = [
-            'outputs',
-            'config',
-            'updatables',
-            'lib_paths',
-            'is_stdlib_cache',
-        ]
-        for key in dont_keep:
-            del odict[key]
+        '''Return only the collected trace data.
 
-        return odict
+        TraceProcessor subclasses Thread, so the default state includes thread
+        handles, locks, the trace queue and an excepthook closure, none of
+        which can be pickled (and none of which are wanted). The configured
+        outputs and config are dropped for the same reason, so a dump can be
+        loaded without them.
+        '''
+        state = {
+            key: getattr(self, key)
+            for key in self._picklable_state
+            if hasattr(self, key)
+        }
+        # The call graph is normally a defaultdict(lambda: defaultdict(int)),
+        # and a lambda cannot be pickled. Rebuild it with a module-level
+        # factory so the data survives a round trip.
+        state['call_dict'] = defaultdict(
+            _empty_int_dict,
+            {src: defaultdict(int, dests)
+             for src, dests in self.call_dict.items()},
+        )
+        # A restored trace still needs a few settings to render, and the live
+        # config (argparse parser et al) cannot be pickled, so store a small
+        # picklable stand-in instead.
+        state['config'] = ProcessedTraceConfig(getattr(self, 'config', None))
+        return state
 
     def groups(self):
         grp = defaultdict(list)
@@ -350,10 +544,22 @@ class TraceProcessor(Thread):
         for g in list(grp.items()):
             yield g
 
+    def _grouper(self):
+        '''The grouping function used to build nodes/edges.
+
+        A live processor takes it from the config. An unpickled processor has
+        no config, so the grouper is restored from the pickled state instead
+        (see __getstate__); the default groups everything by top-level module.
+        '''
+        config = getattr(self, 'config', None)
+        if config is not None:
+            return config.trace_grouper
+        return getattr(self, 'trace_grouper', Grouper())
+
     def stat_group_from_func(self, func, calls):
         stat_group = StatGroup()
         stat_group.name = func
-        stat_group.group = self.config.trace_grouper(func)
+        stat_group.group = self._grouper()(func)
         stat_group.calls = Stat(calls, self.func_count_max)
         stat_group.time = Stat(self.func_time.get(func, 0), self.func_time_max)
         stat_group.memory_in = Stat(
@@ -403,27 +609,26 @@ class StatGroup(object):
     pass
 
 
-def simple_memoize(callable_object):
-    '''Simple memoization for functions without keyword arguments.
+#: Cache of code object -> module, used by ``_module_for_code``.
+#:
+#: ``inspect.getmodule`` costs several syscalls and runs on every traced
+#: 'call' event. There is exactly one code object per function, so the mapping
+#: is stable and worth memoizing. This used to be installed by assigning
+#: ``inspect.getmodule = simple_memoize(inspect.getmodule)``, which patched the
+#: standard library process-wide as a side effect of importing pycallgraph.
+#: The cache is kept private to the tracer instead.
+_module_cache = {}
 
-    This is useful for mapping code objects to module in this context.
-    inspect.getmodule() requires a number of system calls, which may slow down
-    the tracing considerably. Caching the mapping from code objects (there is
-    *one* code object for each function, regardless of how many simultaneous
-    activations records there are).
 
-    In this context we can ignore keyword arguments, but a generic memoizer
-    ought to take care of that as well.
+def _module_for_code(code):
+    '''Return the module a code object belongs to, memoized.
+
+    Safe to call repeatedly: the code object -> module mapping does not change
+    for the lifetime of the process.
     '''
-
-    cache = dict()
-
-    def wrapper(*rest):
-        if rest not in cache:
-            cache[rest] = callable_object(*rest)
-        return cache[rest]
-
-    return wrapper
-
-
-inspect.getmodule = simple_memoize(inspect.getmodule)
+    try:
+        return _module_cache[code]
+    except KeyError:
+        module = inspect.getmodule(code)
+        _module_cache[code] = module
+        return module

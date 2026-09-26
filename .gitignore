@@ -17,3 +17,7 @@ pycallgraph.gdf
 pycallgraph.png
 *env/
 .DS_Store
+pycallgraph.dot
+pycallgraph.json
+pycallgraph.pickle
+basic.png

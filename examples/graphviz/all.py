@@ -12,4 +12,7 @@ for example in examples:
     with open(example) as file:
         source = file.read()
         code = compile(source, example, 'exec')
-        exec(code, {}, {})
+        # Give the example the namespace it expects: each one ends with
+        # ``if __name__ == '__main__': main()``, so __name__ must be set or
+        # the entry point is silently skipped.
+        exec(code, {'__name__': '__main__'}, {})

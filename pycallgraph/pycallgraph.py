@@ -8,8 +8,9 @@ from .exceptions import PyCallGraphException
 
 class PyCallGraph(object):
     def __init__(self, output=None, config=None):
-        '''output can be a single Output instance or an iterable with many
-        of them.  Example usage:
+        '''output can be a single Output instance or a sequence of them.
+        Any other iterable (for example a generator) is materialised here so
+        it can be iterated safely more than once.  Example usage:
 
             PyCallGraph(output=GraphvizOutput(), config=Config())
         '''
@@ -20,9 +21,13 @@ class PyCallGraph(object):
         elif isinstance(output, Output):
             self.output = [output]
         else:
-            self.output = output
+            self.output = list(output)
 
         self.config = config or Config()
+
+        # True between __enter__ and its matching __exit__, so a context that
+        # is exited more than once does not render the outputs again.
+        self._in_context = False
 
         configured_ouput = self.config.get_output()
         if configured_ouput:
@@ -31,10 +36,24 @@ class PyCallGraph(object):
         self.reset()
 
     def __enter__(self):
+        '''Start tracing and return this instance.
+
+        Returning self allows ``with PyCallGraph(...) as graph:``; it used to
+        return None, so ``graph`` was silently bound to None.
+        '''
         self.start()
+        self._in_context = True
+        return self
 
     def __exit__(self, type, value, traceback):
-        self.done()
+        '''Finish the trace and generate the outputs.
+
+        Idempotent, and returns a falsy value so an exception raised in the
+        body still propagates.
+        '''
+        if self._in_context:
+            self._in_context = False
+            self.done()
 
     def get_tracer_class(self):
         if self.config.threaded:

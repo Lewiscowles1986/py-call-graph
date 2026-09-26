@@ -75,13 +75,31 @@ def test_setup_does_not_import_the_package():
     )
 
 
-def test_setup_does_not_import_deprecated_test_command():
+def test_setup_does_not_import_the_deprecated_test_command():
     '''
-    ``setuptools.command.test`` is removed in current setuptools. Importing it
-    makes packaging fail outright on modern build tooling.
+    ``setuptools.command.test`` is deprecated. Importing it is not a build
+    failure in itself, but it re-enables the removed ``setup.py test`` command
+    and emits warnings on modern setuptools.
+
+    This checks the import graph rather than searching the source text: a
+    comment mentioning the module name must not satisfy the test, and an
+    ``import`` written in any style must fail it.
     '''
-    source = open(SETUP_PY).read()
-    assert 'setuptools.command.test' not in source
+    offenders = []
+    for node in ast.walk(_setup_tree()):
+        if isinstance(node, ast.Import):
+            offenders.extend(
+                alias.name for alias in node.names
+                if alias.name == 'setuptools.command.test'
+            )
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ''
+            if module == 'setuptools.command.test':
+                offenders.append(module)
+
+    assert offenders == [], (
+        'setup.py imports setuptools.command.test: %r' % (offenders,)
+    )
 
 
 def test_egg_info_succeeds_without_script_dir_on_path(tmp_path):

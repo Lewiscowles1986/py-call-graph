@@ -1,7 +1,10 @@
 import re
 import sys
+import types
 
 import pytest
+
+import pycallgraph.tracer as tracer
 
 import calls
 from pycallgraph.tracer import TraceProcessor
@@ -61,6 +64,30 @@ def test_yes_stdlib(trace_processor):
 
 
 def test_module_missing_file(trace_processor):
-    sys.settrace(trace_processor.process)
-    import torch  # noqa: F401
-    sys.settrace(None)
+    '''
+    Exercise the ``AttributeError`` branch for a module with no ``__file__``.
+
+    The original test imported torch purely to obtain such a module, which made
+    the whole suite hard-fail wherever torch was not installed. The tracer's
+    own memoized lookup is patched instead, so the same branch is exercised
+    deterministically and without any optional dependency.
+    '''
+    bare_module = types.ModuleType('mock_module')
+    assert not hasattr(bare_module, '__file__')
+
+    original = tracer._module_for_code
+    tracer._module_for_code = lambda code: bare_module
+    try:
+        sys.settrace(trace_processor.process)
+        calls.one_nop()
+    finally:
+        sys.settrace(None)
+        tracer._module_for_code = original
+
+    # The module has no __file__, so the call is filtered out by the
+    # AttributeError branch rather than raising, and nothing is recorded for
+    # it. (sys.settrace(None) means no return events are delivered here, so
+    # the sentinels for the filtered frames remain on the stack; that is a
+    # property of calling process() directly, not of this branch.)
+    assert trace_processor.call_dict == {}
+    assert 'mock_module' not in ''.join(trace_processor.call_stack)

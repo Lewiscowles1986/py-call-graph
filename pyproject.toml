@@ -1,0 +1,15 @@
+[build-system]
+# PEP 517/518. Declaring the backend makes build frontends (pip, build, uv) use
+# the standard isolated build path instead of the legacy setup.py code path, and
+# lets `pip install .` work without --use-pep517.
+#
+# The distribution metadata itself still lives in setup.py (which reads
+# pycallgraph/metadata.py by file path, see issue #29). Migrating that metadata
+# into [project] here is deliberately left as a separate, behaviour-preserving
+# change so this one cannot alter the published package.
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+# Keep a bare `pytest` run from collecting build artefacts.
+norecursedirs = [".git", "build", "dist", ".cache", "*.egg-info"]

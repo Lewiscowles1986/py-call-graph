@@ -23,9 +23,9 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 @pytest.fixture
-def json_output(temp):
+def json_output(tmp_path):
     output = JSONOutput()
-    output.output_file = temp
+    output.output_file = str(tmp_path / 'pycallgraph.json')
     return output
 
 
@@ -186,8 +186,9 @@ def test_document_keys_are_in_documented_order(json_output):
     assert list(document) == ['version', 'nodes', 'edges']
 
 
-def test_json_output_works_from_the_command_line(temp):
+def test_json_output_works_from_the_command_line(tmp_path):
     '''End-to-end check that the CLI can select and drive the json output.'''
+    temp = str(tmp_path / 'cli.json')
     env = dict(os.environ)
     env['PYTHONPATH'] = REPO_ROOT
     result = subprocess.run(

@@ -1,4 +1,3 @@
-import re
 import os
 from shutil import which
 from typing import Optional
@@ -20,15 +19,21 @@ class Output(object):
         [setattr(self, k, v) for k, v in list(kwargs.items())]
 
     def set_config(self, config):
+        '''Move the output options from a Config onto this output.
+
+        Only attributes the output already declares (typically its
+        constructor defaults, set from the command line as output options) are
+        copied. This used to copy *every* attribute of the config unless the
+        output had a callable of the same name, which put the argparse parser,
+        the selected output-type name and unrelated config state onto the
+        output.
         '''
-        This is a quick hack to move the config variables set in Config into
-        the output module config variables.
-        '''
-        for k, v in list(config.__dict__.items()):
-            if hasattr(self, k) and \
-                    callable(getattr(self, k)):
+        for key, value in list(vars(config).items()):
+            if key not in vars(self):
                 continue
-            setattr(self, k, v)
+            if callable(getattr(self, key, None)):
+                continue
+            setattr(self, key, value)
 
     def node_color(self, node):
         value = float(node.time.fraction * 2 + node.calls.fraction) / 3
@@ -100,12 +105,12 @@ class Output(object):
         )
 
     def normalize_path(self, path):
-        regex_user_expand = re.compile(r'\A~')
-        if regex_user_expand.match(path):
-            path = os.path.expanduser(path)
-        else:
-            path = os.path.expandvars(path)  # expand, just in case
-        return path
+        '''Expand both ``~`` and environment variables in ``path``.
+
+        A path may legitimately use both forms (``~/graphs/$RUN.json``), so
+        each expansion is applied in turn rather than choosing between them.
+        '''
+        return os.path.expandvars(os.path.expanduser(path))
 
     def prepare_output_file(self):
         if self.fp is None:
