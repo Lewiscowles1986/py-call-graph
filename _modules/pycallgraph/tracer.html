@@ -245,6 +245,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_in</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_out</span> <span class="o">=</span> <span class="p">[]</span>
 
+        <span class="c1"># Frames that were actually pushed, one per entry of call_stack after</span>
+        <span class="c1"># the initial &#39;__main__&#39;. Needed to recognise a generator resumption:</span>
+        <span class="c1"># sys.settrace emits a &#39;call&#39; event every time a generator is resumed,</span>
+        <span class="c1"># and the same frame object is reused.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_frames</span> <span class="o">=</span> <span class="p">[]</span>
+
 <div class="viewcode-block" id="TraceProcessor.init_libpath">
 <a class="viewcode-back" href="../../api/tracer.html#pycallgraph.tracer.TraceProcessor.init_libpath">[docs]</a>
     <span class="k">def</span> <span class="nf">init_libpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -283,7 +289,7 @@
 
         <span class="c1"># Cache of file name -&gt; bool. is_module_stdlib runs for every &#39;call&#39;</span>
         <span class="c1"># event, and each miss costs syscalls (lstat/readlink in realpath), so</span>
-        <span class="c1"># results are memoized exactly as inspect.getmodule is above.</span>
+        <span class="c1"># results are memoized by the same idea as _module_for_code above.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_stdlib_cache</span> <span class="o">=</span> <span class="p">{}</span></div>
 
 
@@ -340,11 +346,39 @@
             <span class="n">keep</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="n">code</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">f_code</span>
 
+            <span class="n">is_generator</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="s1">&#39;co_flags&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">inspect</span><span class="o">.</span><span class="n">CO_GENERATOR</span><span class="p">)</span>
+
+            <span class="c1"># Resuming a generator emits another &#39;call&#39; event for the *same*</span>
+            <span class="c1"># frame. That is not a new invocation, so do not push or count it</span>
+            <span class="c1"># again -- just re-arm the timer for the next segment.</span>
+            <span class="k">if</span> <span class="n">is_generator</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_frames</span> \
+                    <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_frames</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="n">frame</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_timer</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_timer</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+                <span class="k">return</span>
+
+            <span class="c1"># Align the stack with the real call chain before recording this</span>
+            <span class="c1"># frame. A generator that is left suspended, or one that is still</span>
+            <span class="c1"># being consumed, can leave frames above the caller; without this</span>
+            <span class="c1"># the next edge is attributed to the wrong function.</span>
+            <span class="n">caller_frame</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="s1">&#39;f_back&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">caller_frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_frames</span> <span class="ow">and</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_frames</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">caller_frame</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">call_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_timer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_frames</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_in</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_in</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_out</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_out</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
             <span class="c1"># Stores all the parts of a human readable name of the current call</span>
             <span class="n">full_name_list</span> <span class="o">=</span> <span class="p">[]</span>
 
             <span class="c1"># Work out the module name</span>
-            <span class="n">module</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmodule</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="n">_module_for_code</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">module</span><span class="p">:</span>
                 <span class="n">module_name</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="vm">__name__</span>
                 <span class="k">try</span><span class="p">:</span>
@@ -405,6 +439,7 @@
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">call_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">full_name</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_timer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">())</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">memory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_in</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">memory</span><span class="p">)</span>
@@ -418,6 +453,7 @@
                 <span class="c1"># was combined with a filter or --max-depth.</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">call_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_timer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">memory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_in</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
@@ -425,9 +461,25 @@
 
         <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;return&#39;</span><span class="p">:</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack</span><span class="p">:</span>
+            <span class="c1"># Re-arm rather than pop: a generator resumption will follow with</span>
+            <span class="c1"># a &#39;call&#39; event for this same frame.</span>
+            <span class="n">yielding</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">arg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_frames</span> \
+                    <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_frames</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="n">frame</span><span class="p">:</span>
+                <span class="n">yielding</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">yielding</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_frames</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_frames</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
                 <span class="n">full_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
+                <span class="c1"># A frame returns control to its *caller* (frame.f_back), not</span>
+                <span class="c1"># necessarily to whatever is on top of the stack: a generator</span>
+                <span class="c1"># that is left suspended, or one that is still being consumed,</span>
+                <span class="c1"># can strand frames above its caller. Rewinding to f_back keeps</span>
+                <span class="c1"># the stack honest and stops the next edge being attributed to</span>
+                <span class="c1"># the wrong caller.</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_timer</span><span class="p">:</span>
                     <span class="n">start_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_timer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -609,30 +661,29 @@
     <span class="k">pass</span>
 
 
-<span class="k">def</span> <span class="nf">simple_memoize</span><span class="p">(</span><span class="n">callable_object</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;Simple memoization for functions without keyword arguments.</span>
+<span class="c1">#: Cache of code object -&gt; module, used by ``_module_for_code``.</span>
+<span class="c1">#:</span>
+<span class="c1">#: ``inspect.getmodule`` costs several syscalls and runs on every traced</span>
+<span class="c1">#: &#39;call&#39; event. There is exactly one code object per function, so the mapping</span>
+<span class="c1">#: is stable and worth memoizing. This used to be installed by assigning</span>
+<span class="c1">#: ``inspect.getmodule = simple_memoize(inspect.getmodule)``, which patched the</span>
+<span class="c1">#: standard library process-wide as a side effect of importing pycallgraph.</span>
+<span class="c1">#: The cache is kept private to the tracer instead.</span>
+<span class="n">_module_cache</span> <span class="o">=</span> <span class="p">{}</span>
 
-<span class="sd">    This is useful for mapping code objects to module in this context.</span>
-<span class="sd">    inspect.getmodule() requires a number of system calls, which may slow down</span>
-<span class="sd">    the tracing considerably. Caching the mapping from code objects (there is</span>
-<span class="sd">    *one* code object for each function, regardless of how many simultaneous</span>
-<span class="sd">    activations records there are).</span>
 
-<span class="sd">    In this context we can ignore keyword arguments, but a generic memoizer</span>
-<span class="sd">    ought to take care of that as well.</span>
+<span class="k">def</span> <span class="nf">_module_for_code</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Return the module a code object belongs to, memoized.</span>
+
+<span class="sd">    Safe to call repeatedly: the code object -&gt; module mapping does not change</span>
+<span class="sd">    for the lifetime of the process.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-
-    <span class="n">cache</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">rest</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">rest</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
-            <span class="n">cache</span><span class="p">[</span><span class="n">rest</span><span class="p">]</span> <span class="o">=</span> <span class="n">callable_object</span><span class="p">(</span><span class="o">*</span><span class="n">rest</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cache</span><span class="p">[</span><span class="n">rest</span><span class="p">]</span>
-
-    <span class="k">return</span> <span class="n">wrapper</span>
-
-
-<span class="n">inspect</span><span class="o">.</span><span class="n">getmodule</span> <span class="o">=</span> <span class="n">simple_memoize</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getmodule</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_module_cache</span><span class="p">[</span><span class="n">code</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">module</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmodule</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+        <span class="n">_module_cache</span><span class="p">[</span><span class="n">code</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span>
+        <span class="k">return</span> <span class="n">module</span>
 </pre></div>
 
             <div class="clearer"></div>
