@@ -75,8 +75,13 @@ or warn if there is a problem.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pycallgraph.output.Output.set_config">
 <span class="sig-name descname"><span class="pre">set_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/output.html#Output.set_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.Output.set_config" title="Link to this definition">¶</a></dt>
-<dd><p>This is a quick hack to move the config variables set in Config into
-the output module config variables.</p>
+<dd><p>Move the output options from a Config onto this output.</p>
+<p>Only attributes the output already declares (typically its
+constructor defaults, set from the command line as output options) are
+copied. This used to copy <em>every</em> attribute of the config unless the
+output had a callable of the same name, which put the argparse parser,
+the selected output-type name and unrelated config state onto the
+output.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -136,6 +141,16 @@ or warn if there is a problem.</p>
 <dt class="sig sig-object py" id="pycallgraph.output.GephiOutput.done">
 <span class="sig-name descname"><span class="pre">done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/gephi.html#GephiOutput.done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.GephiOutput.done" title="Link to this definition">¶</a></dt>
 <dd><p>Called when the trace is complete and ready to be saved.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.output.GephiOutput.escape">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">escape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/gephi.html#GephiOutput.escape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.GephiOutput.escape" title="Link to this definition">¶</a></dt>
+<dd><p>Quote and escape a GDF field value.</p>
+<p>GDF is comma-separated, so any value containing a comma, a double
+quote or a newline must be quoted, and embedded double quotes are
+doubled. Values that need no quoting are returned unchanged so the
+common case stays readable.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -249,6 +264,7 @@ own options.</p>
 </li>
 <li><a class="reference internal" href="#pycallgraph.output.GephiOutput"><code class="docutils literal notranslate"><span class="pre">GephiOutput</span></code></a><ul>
 <li><a class="reference internal" href="#pycallgraph.output.GephiOutput.done"><code class="docutils literal notranslate"><span class="pre">GephiOutput.done()</span></code></a></li>
+<li><a class="reference internal" href="#pycallgraph.output.GephiOutput.escape"><code class="docutils literal notranslate"><span class="pre">GephiOutput.escape()</span></code></a></li>
 <li><a class="reference internal" href="#pycallgraph.output.GephiOutput.generate"><code class="docutils literal notranslate"><span class="pre">GephiOutput.generate()</span></code></a></li>
 </ul>
 </li>
