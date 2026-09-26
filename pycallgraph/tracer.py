@@ -12,6 +12,11 @@ from threading import Thread
 from .util import Util
 
 
+def _empty_int_dict():
+    '''Module-level factory so the call graph default can be pickled.'''
+    return defaultdict(int)
+
+
 class SyncronousTracer(object):
 
     def __init__(self, outputs, config):
@@ -57,6 +62,21 @@ class TraceProcessor(Thread):
     Contains a callback used by sys.settrace, which collects information about
     function call count, time taken, etc.
     '''
+
+    # The subset of state that is meaningful once a trace has finished and
+    # that can safely be pickled. Runtime-only threading state, the open
+    # outputs and the config are deliberately excluded.
+    _picklable_state = (
+        'call_stack',
+        'func_count',
+        'func_count_max',
+        'func_time',
+        'func_time_max',
+        'func_memory_in',
+        'func_memory_in_max',
+        'func_memory_out',
+        'func_memory_out_max',
+    )
 
     def __init__(self, outputs, config):
         Thread.__init__(self)
@@ -327,21 +347,28 @@ class TraceProcessor(Thread):
         return result
 
     def __getstate__(self):
-        '''Used for when creating a pickle. Certain instance variables can't
-        pickled and aren't used anyway.
-        '''
-        odict = self.__dict__.copy()
-        dont_keep = [
-            'outputs',
-            'config',
-            'updatables',
-            'lib_paths',
-            'is_stdlib_cache',
-        ]
-        for key in dont_keep:
-            del odict[key]
+        '''Return only the collected trace data.
 
-        return odict
+        TraceProcessor subclasses Thread, so the default state includes thread
+        handles, locks, the trace queue and an excepthook closure, none of
+        which can be pickled (and none of which are wanted). The configured
+        outputs and config are dropped for the same reason, so a dump can be
+        loaded without them.
+        '''
+        state = {
+            key: getattr(self, key)
+            for key in self._picklable_state
+            if hasattr(self, key)
+        }
+        # The call graph is normally a defaultdict(lambda: defaultdict(int)),
+        # and a lambda cannot be pickled. Rebuild it with a module-level
+        # factory so the data survives a round trip.
+        state['call_dict'] = defaultdict(
+            _empty_int_dict,
+            {src: defaultdict(int, dests)
+             for src, dests in self.call_dict.items()},
+        )
+        return state
 
     def groups(self):
         grp = defaultdict(list)
