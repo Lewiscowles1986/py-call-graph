@@ -30,6 +30,23 @@ class GephiOutput(Output):
             self.generate_edges(),
         ]) + '\n'
 
+    @staticmethod
+    def escape(value):
+        """Quote and escape a GDF field value.
+
+        GDF is comma-separated, so any value containing a comma, a double
+        quote or a newline must be quoted, and embedded double quotes are
+        doubled. Values that need no quoting are returned unchanged so the
+        common case stays readable.
+        """
+        text = str(value)
+        if any(character in text for character in (',', '"', '\n', '\r')):
+            return '"{}"'.format(
+                text.replace('"', '""').replace('\r\n', '\\n')
+                .replace('\n', '\\n').replace('\r', '\\n')
+            )
+        return text
+
     def generate_nodes(self):
         output = []
 
@@ -47,7 +64,7 @@ class GephiOutput(Output):
         output.append('nodedef> {}'.format(fields))
 
         for node in self.processor.nodes():
-            fields = ','.join([str(a) for a in [
+            fields = ','.join([self.escape(a) for a in [
                 node.name,
                 node.name,
                 node.group,
@@ -80,7 +97,7 @@ class GephiOutput(Output):
         output.append('edgedef> {}'.format(fields))
 
         for edge in self.processor.edges():
-            fields = ','.join([str(a) for a in [
+            fields = ','.join([self.escape(a) for a in [
                 edge.src_func,
                 edge.dst_func,
                 self.edge_label(edge),
@@ -95,6 +112,6 @@ class GephiOutput(Output):
 
     def done(self):
         source = self.generate()
-        f = open(self.output_file, 'w')
-        f.write(source)
-        f.close()
+        # Expand '~' and environment variables like every other output.
+        with open(self.normalize_path(self.output_file), 'w') as handle:
+            handle.write(source)
