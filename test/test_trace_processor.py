@@ -61,6 +61,15 @@ def test_yes_stdlib(trace_processor):
 
 
 def test_module_missing_file(trace_processor):
-    sys.settrace(trace_processor.process)
-    import torch  # noqa: F401
-    sys.settrace(None)
+    # Use a stub module to test the missing __file__ behavior without external dependencies
+    import types
+    import unittest.mock as mock
+    
+    # Create a mock module that lacks __file__ attribute
+    mock_module = types.ModuleType('mock_module')
+    mock_module.__dict__.pop('__file__', None)
+    
+    with mock.patch.dict(sys.modules, {'mock_module': mock_module}):
+        sys.settrace(trace_processor.process)
+        import mock_module
+        sys.settrace(None)
