@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pycallgraph.tracer &#8212; Python Call Graph 2.1.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/classic.css?v=514cf933" />
+    <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
+    
+    <script src="../../_static/documentation_options.js?v=4f932e3e"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Python Call Graph 2.1.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">pycallgraph.tracer</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pycallgraph.tracer</h1><div class="highlight"><pre>
+<span></span>
+
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">sysconfig</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">Empty</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">Util</span>
+<span class="kn">from</span> <span class="nn">.grouper</span> <span class="kn">import</span> <span class="n">Grouper</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">PyCallGraphException</span>
+
+
+<span class="c1">#: Sentinel placed on the trace queue to tell the processor thread that</span>
+<span class="c1">#: everything queued before it has been processed and it should exit.</span>
+<span class="n">_SHUTDOWN</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_empty_int_dict</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Module-level factory so the call graph default can be pickled.&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ProcessedTraceConfig</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;The subset of configuration a *restored* trace still needs.</span>
+
+<span class="sd">    Outputs read a handful of settings off ``processor.config`` while</span>
+<span class="sd">    rendering (grouping, memory labels, verbosity). A live processor gets a</span>
+<span class="sd">    full ``Config``, but that object holds an ``argparse`` parser and cannot</span>
+<span class="sd">    be pickled. A dump therefore stores this small, picklable stand-in so a</span>
+<span class="sd">    trace loaded later can still be rendered without the original process.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;groups&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trace_grouper</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;trace_grouper&#39;</span><span class="p">,</span> <span class="n">Grouper</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">memory</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;memory&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trace_grouper</span> <span class="o">=</span> <span class="n">Grouper</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">memory</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">log_verbose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">log_debug</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SyncronousTracer">
+<a class="viewcode-back" href="../../api/tracer.html#pycallgraph.tracer.SyncronousTracer">[docs]</a>
+<span class="k">class</span> <span class="nc">SyncronousTracer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processor</span> <span class="o">=</span> <span class="n">TraceProcessor</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="c1"># Set once this tracer has reported that the memory backend cannot</span>
+        <span class="c1"># measure, so the warning is not repeated for every traced event.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memory_backend_warned</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">tracer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracer</span>
+
+<div class="viewcode-block" id="SyncronousTracer.memory">
+<a class="viewcode-back" href="../../api/tracer.html#pycallgraph.tracer.SyncronousTracer.memory">[docs]</a>
+    <span class="k">def</span> <span class="nf">memory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Return the current memory usage in bytes, or None if disabled.</span>
+
+<span class="sd">        A negative reading from ``memory_usage`` means &quot;could not measure&quot;</span>
+<span class="sd">        (for example ``ps v`` on macOS has no RSS column). That is reported as</span>
+<span class="sd">        ``None`` so it is not published as a real, negative figure, and the</span>
+<span class="sd">        reason is logged once rather than on every traced event.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">memory</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="kn">from</span> <span class="nn">.memory_profiler</span> <span class="kn">import</span> <span class="n">memory_usage</span>
+
+        <span class="n">sample</span> <span class="o">=</span> <span class="n">memory_usage</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">sample</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_memory_backend_warned</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_memory_backend_warned</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s1">&#39;Memory usage could not be measured on this platform: the &#39;</span>
+                    <span class="s1">&#39;memory backend returned -1, which usually means the &#39;</span>
+                    <span class="s1">&#39;psutil module is missing and no usable ps backend is &#39;</span>
+                    <span class="s1">&#39;available. Memory statistics will be omitted. Installing &#39;</span>
+                    <span class="s1">&#39;psutil may help.&#39;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">sample</span> <span class="o">*</span> <span class="mi">1000000</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">settrace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracer</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">settrace</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+
+<span class="c1"># The historical class names misspell &quot;Synchronous&quot;/&quot;Asynchronous&quot;, but they</span>
+<span class="c1"># are public: they are importable from pycallgraph.tracer, returned by</span>
+<span class="c1"># PyCallGraph.get_tracer_class() and used as headings in the API docs, so</span>
+<span class="c1"># renaming them would break callers. The correctly spelled names are provided</span>
+<span class="c1"># as aliases instead, and both refer to the same class object.</span>
+<span class="n">SynchronousTracer</span> <span class="o">=</span> <span class="n">SyncronousTracer</span>
+
+
+<div class="viewcode-block" id="AsyncronousTracer">
+<a class="viewcode-back" href="../../api/tracer.html#pycallgraph.tracer.AsyncronousTracer">[docs]</a>
+<span class="k">class</span> <span class="nc">AsyncronousTracer</span><span class="p">(</span><span class="n">SyncronousTracer</span><span class="p">):</span>
+
+    <span class="c1">#: How long to wait for the trace processor to drain and exit. A stuck</span>
+    <span class="c1">#: processor used to block the traced program forever with no diagnostics.</span>
+    <span class="n">shutdown_timeout</span> <span class="o">=</span> <span class="mf">10.0</span>
+
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="n">SyncronousTracer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">tracer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">queue</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracer</span>
+
+    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shutdown_timeout</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">is_alive</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">PyCallGraphException</span><span class="p">(</span>
+                <span class="s1">&#39;The threaded trace processor did not finish within &#39;</span>
+                <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> seconds. The trace is incomplete; try running without &#39;</span>
+                <span class="s1">&#39;threaded tracing.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shutdown_timeout</span><span class="p">)</span>
+            <span class="p">)</span></div>
+
+
+
+<span class="n">AsynchronousTracer</span> <span class="o">=</span> <span class="n">AsyncronousTracer</span>
+
+
+<div class="viewcode-block" id="TraceProcessor">
+<a class="viewcode-back" href="../../api/tracer.html#pycallgraph.tracer.TraceProcessor">[docs]</a>
+<span class="k">class</span> <span class="nc">TraceProcessor</span><span class="p">(</span><span class="n">Thread</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Contains a callback used by sys.settrace, which collects information about</span>
+<span class="sd">    function call count, time taken, etc.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c1"># The subset of state that is meaningful once a trace has finished and</span>
+    <span class="c1"># that can safely be pickled. Runtime-only threading state, the open</span>
+    <span class="c1"># outputs and the config are deliberately excluded. Keep this in sync</span>
+    <span class="c1"># with the counters set up in init_trace_data (see test_pickle.py).</span>
+    <span class="n">_picklable_state</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">&#39;call_stack&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;func_count&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;func_count_max&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;func_time&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;func_time_max&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;func_memory_in&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;func_memory_in_max&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;func_memory_out&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;func_memory_out_max&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="c1"># Daemon so a trace that is never cleanly finished cannot keep the</span>
+        <span class="c1"># interpreter alive at exit. A normal run still joins the processor in</span>
+        <span class="c1"># AsyncronousTracer.done() before outputs are generated.</span>
+        <span class="n">Thread</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trace_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keep_going</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="n">outputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updatables</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">should_update</span><span class="p">()]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_trace_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_libpath</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">init_trace_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># A mapping of which function called which other function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+
+        <span class="c1"># Current call stack</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_stack</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;__main__&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Counters for each function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func_count</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func_count_max</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func_count</span><span class="p">[</span><span class="s1">&#39;__main__&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="c1"># Accumulative time per function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func_time</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func_time_max</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Accumulative memory addition per function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_in</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_in_max</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Accumulative memory addition per function once exited</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_out</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_out_max</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Keeps track of the start time of each call on the stack</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_timer</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_in</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_out</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="TraceProcessor.init_libpath">
+<a class="viewcode-back" href="../../api/tracer.html#pycallgraph.tracer.TraceProcessor.init_libpath">[docs]</a>
+    <span class="k">def</span> <span class="nf">init_libpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Work out the directories which contain library (non-user) code.</span>
+
+<span class="sd">        ``sysconfig`` reports the *logical* install location, which is often a</span>
+<span class="sd">        symlink (Homebrew, asdf and conda all do this). Modules report their</span>
+<span class="sd">        *real* path via ``__file__``, so both the logical and the resolved</span>
+<span class="sd">        paths are recorded to keep detection working on symlinked installs.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">paths</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;stdlib&#39;</span><span class="p">,</span> <span class="s1">&#39;platstdlib&#39;</span><span class="p">,</span> <span class="s1">&#39;purelib&#39;</span><span class="p">,</span> <span class="s1">&#39;platlib&#39;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="n">sysconfig</span><span class="o">.</span><span class="n">get_path</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="n">libdest</span> <span class="o">=</span> <span class="n">sysconfig</span><span class="o">.</span><span class="n">get_config_var</span><span class="p">(</span><span class="s1">&#39;LIBDEST&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">libdest</span><span class="p">:</span>
+            <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">libdest</span><span class="p">)</span>
+
+        <span class="c1"># Normalise to absolute, resolved (symlink-free) paths. A separator</span>
+        <span class="c1"># suffix makes the lookup a proper path-boundary test rather than a</span>
+        <span class="c1"># bare string prefix test, so &#39;/usr/lib/python3.13-extra/x.py&#39; is not</span>
+        <span class="c1"># mistaken for a module inside &#39;/usr/lib/python3.13&#39;.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lib_paths</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">path</span><span class="p">)):</span>
+                <span class="n">candidate</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">candidate</span><span class="p">),</span> <span class="s1">&#39;&#39;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">candidate</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lib_paths</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lib_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+
+        <span class="c1"># Cache of file name -&gt; bool. is_module_stdlib runs for every &#39;call&#39;</span>
+        <span class="c1"># event, and each miss costs syscalls (lstat/readlink in realpath), so</span>
+        <span class="c1"># results are memoized exactly as inspect.getmodule is above.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_stdlib_cache</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+
+    <span class="k">def</span> <span class="nf">queue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">memory</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;frame&#39;</span><span class="p">:</span> <span class="n">frame</span><span class="p">,</span>
+            <span class="s1">&#39;event&#39;</span><span class="p">:</span> <span class="n">event</span><span class="p">,</span>
+            <span class="s1">&#39;arg&#39;</span><span class="p">:</span> <span class="n">arg</span><span class="p">,</span>
+            <span class="s1">&#39;memory&#39;</span><span class="p">:</span> <span class="n">memory</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trace_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TraceProcessor.run">
+<a class="viewcode-back" href="../../api/tracer.html#pycallgraph.tracer.TraceProcessor.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trace_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">Empty</span><span class="p">:</span>
+                <span class="c1"># Nothing to process yet. If shutdown has been requested and</span>
+                <span class="c1"># the queue is genuinely empty, the backlog is drained.</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_going</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="n">_SHUTDOWN</span><span class="p">:</span>
+                <span class="c1"># Sentinel: everything queued before this has been processed.</span>
+                <span class="k">break</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TraceProcessor.done">
+<a class="viewcode-back" href="../../api/tracer.html#pycallgraph.tracer.TraceProcessor.done">[docs]</a>
+    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Ask the processor to finish and exit.</span>
+
+<span class="sd">        Everything already queued is still processed, then the worker exits</span>
+<span class="sd">        on the sentinel. This replaces a busy-wait on ``queue.empty()`` that</span>
+<span class="sd">        spun forever if the worker had already stopped.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keep_going</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trace_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">_SHUTDOWN</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TraceProcessor.process">
+<a class="viewcode-back" href="../../api/tracer.html#pycallgraph.tracer.TraceProcessor.process">[docs]</a>
+    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">memory</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;This function processes a trace result. Keeps track of</span>
+<span class="sd">        relationships between calls.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;call&#39;</span><span class="p">:</span>
+            <span class="n">keep</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">code</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">f_code</span>
+
+            <span class="c1"># Stores all the parts of a human readable name of the current call</span>
+            <span class="n">full_name_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c1"># Work out the module name</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmodule</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">module</span><span class="p">:</span>
+                <span class="n">module_name</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="vm">__name__</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">module_path</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="vm">__file__</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">include_stdlib</span> \
+                            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_module_stdlib</span><span class="p">(</span><span class="n">module_path</span><span class="p">):</span>
+                        <span class="n">keep</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="n">keep</span> <span class="o">=</span> <span class="kc">False</span>
+
+                <span class="k">if</span> <span class="n">module_name</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+                    <span class="n">module_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">module_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+            <span class="k">if</span> <span class="n">module_name</span><span class="p">:</span>
+                <span class="n">full_name_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
+
+            <span class="c1"># Work out the class name</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">class_name</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">f_locals</span><span class="p">[</span><span class="s1">&#39;self&#39;</span><span class="p">]</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+                <span class="n">full_name_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">class_name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+                <span class="n">class_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+            <span class="c1"># Work out the current function or method</span>
+            <span class="n">func_name</span> <span class="o">=</span> <span class="n">code</span><span class="o">.</span><span class="n">co_name</span>
+            <span class="k">if</span> <span class="n">func_name</span> <span class="o">==</span> <span class="s1">&#39;?&#39;</span><span class="p">:</span>
+                <span class="n">func_name</span> <span class="o">=</span> <span class="s1">&#39;__main__&#39;</span>
+            <span class="n">full_name_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">func_name</span><span class="p">)</span>
+
+            <span class="c1"># Create a readable representation of the current call</span>
+            <span class="n">full_name</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">full_name_list</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call_stack</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_depth</span><span class="p">:</span>
+                <span class="n">keep</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="c1"># Load the trace filter, if any. &#39;keep&#39; determines if we should</span>
+            <span class="c1"># ignore this call</span>
+            <span class="k">if</span> <span class="n">keep</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trace_filter</span><span class="p">:</span>
+                <span class="n">keep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trace_filter</span><span class="p">(</span><span class="n">full_name</span><span class="p">)</span>
+
+            <span class="c1"># Store the call information</span>
+            <span class="k">if</span> <span class="n">keep</span><span class="p">:</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack</span><span class="p">:</span>
+                    <span class="n">src_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">src_func</span> <span class="o">=</span> <span class="kc">None</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">call_dict</span><span class="p">[</span><span class="n">src_func</span><span class="p">][</span><span class="n">full_name</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">func_count</span><span class="p">[</span><span class="n">full_name</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">func_count_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">func_count_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">func_count</span><span class="p">[</span><span class="n">full_name</span><span class="p">]</span>
+                <span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">call_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">full_name</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_timer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">())</span>
+
+                <span class="k">if</span> <span class="n">memory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_in</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">memory</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_out</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">full_name</span><span class="p">,</span> <span class="n">memory</span><span class="p">])</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Keep all four stacks in step so a return can pop them</span>
+                <span class="c1"># positionally. Filtered frames push sentinels onto every</span>
+                <span class="c1"># stack; previously the memory stacks were skipped, which</span>
+                <span class="c1"># attributed memory to the wrong function whenever --memory</span>
+                <span class="c1"># was combined with a filter or --max-depth.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">call_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_timer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">memory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_in</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;return&#39;</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack</span><span class="p">:</span>
+                <span class="n">full_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_timer</span><span class="p">:</span>
+                    <span class="n">start_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_timer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">start_time</span> <span class="o">=</span> <span class="kc">None</span>
+
+                <span class="k">if</span> <span class="n">start_time</span><span class="p">:</span>
+                    <span class="n">call_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">func_time</span><span class="p">[</span><span class="n">full_name</span><span class="p">]</span> <span class="o">+=</span> <span class="n">call_time</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">func_time_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">func_time_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">func_time</span><span class="p">[</span><span class="n">full_name</span><span class="p">]</span>
+                    <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">memory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Pop unconditionally so the stacks cannot drift. An entry</span>
+                    <span class="c1"># is None for a filtered frame; a measured value of 0 is a</span>
+                    <span class="c1"># real reading and must not be treated as &quot;no data&quot;.</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_in</span><span class="p">:</span>
+                        <span class="n">start_mem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_in</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">start_mem</span> <span class="o">=</span> <span class="kc">None</span>
+
+                    <span class="k">if</span> <span class="n">start_mem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">call_memory</span> <span class="o">=</span> <span class="n">memory</span> <span class="o">-</span> <span class="n">start_mem</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_in</span><span class="p">[</span><span class="n">full_name</span><span class="p">]</span> <span class="o">+=</span> <span class="n">call_memory</span>
+
+                        <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_in_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_in_max</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_in</span><span class="p">[</span><span class="n">full_name</span><span class="p">],</span>
+                        <span class="p">)</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_out</span><span class="p">:</span>
+                        <span class="n">entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_stack_memory_out</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">entry</span> <span class="o">=</span> <span class="kc">None</span>
+
+                    <span class="c1"># Compute memory-out here, at return time, rather than</span>
+                    <span class="c1"># relying on a global flag tied to the previous event,</span>
+                    <span class="c1"># which desynchronised the stack when a reading was 0.</span>
+                    <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">out_name</span><span class="p">,</span> <span class="n">out_mem</span> <span class="o">=</span> <span class="n">entry</span>
+                        <span class="k">if</span> <span class="n">out_mem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">out_memory</span> <span class="o">=</span> <span class="n">memory</span> <span class="o">-</span> <span class="n">out_mem</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_out</span><span class="p">[</span><span class="n">out_name</span><span class="p">]</span> <span class="o">+=</span> <span class="n">out_memory</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_out_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_out_max</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_out</span><span class="p">[</span><span class="n">out_name</span><span class="p">],</span>
+                            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TraceProcessor.is_module_stdlib">
+<a class="viewcode-back" href="../../api/tracer.html#pycallgraph.tracer.TraceProcessor.is_module_stdlib">[docs]</a>
+    <span class="k">def</span> <span class="nf">is_module_stdlib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns True if ``file_name`` lives under a known library directory.</span>
+
+<span class="sd">        &quot;Library&quot; here means the standard library *and* installed packages:</span>
+<span class="sd">        ``sysconfig``&#39;s stdlib/platstdlib plus the purelib/platlib</span>
+<span class="sd">        (site-packages) directories. That mirrors the ``--stdlib`` option,</span>
+<span class="sd">        which controls whether both are included in the trace.</span>
+
+<span class="sd">        The check is a path-boundary prefix match on the symlink-resolved,</span>
+<span class="sd">        lower-cased path, so it is tolerant of symlinked interpreters</span>
+<span class="sd">        (Homebrew, asdf, conda) and of case differences between the recorded</span>
+<span class="sd">        paths and a module&#39;s ``__file__``.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_stdlib_cache</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="n">resolved</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">any</span><span class="p">([</span>
+            <span class="n">resolved</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">lib_path</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">lib_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lib_paths</span>
+        <span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_stdlib_cache</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Return only the collected trace data.</span>
+
+<span class="sd">        TraceProcessor subclasses Thread, so the default state includes thread</span>
+<span class="sd">        handles, locks, the trace queue and an excepthook closure, none of</span>
+<span class="sd">        which can be pickled (and none of which are wanted). The configured</span>
+<span class="sd">        outputs and config are dropped for the same reason, so a dump can be</span>
+<span class="sd">        loaded without them.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_picklable_state</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="c1"># The call graph is normally a defaultdict(lambda: defaultdict(int)),</span>
+        <span class="c1"># and a lambda cannot be pickled. Rebuild it with a module-level</span>
+        <span class="c1"># factory so the data survives a round trip.</span>
+        <span class="n">state</span><span class="p">[</span><span class="s1">&#39;call_dict&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span>
+            <span class="n">_empty_int_dict</span><span class="p">,</span>
+            <span class="p">{</span><span class="n">src</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">dests</span><span class="p">)</span>
+             <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dests</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+        <span class="p">)</span>
+        <span class="c1"># A restored trace still needs a few settings to render, and the live</span>
+        <span class="c1"># config (argparse parser et al) cannot be pickled, so store a small</span>
+        <span class="c1"># picklable stand-in instead.</span>
+        <span class="n">state</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ProcessedTraceConfig</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;config&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">state</span>
+
+    <span class="k">def</span> <span class="nf">groups</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">grp</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
+            <span class="n">grp</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">group</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">grp</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">yield</span> <span class="n">g</span>
+
+    <span class="k">def</span> <span class="nf">_grouper</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;The grouping function used to build nodes/edges.</span>
+
+<span class="sd">        A live processor takes it from the config. An unpickled processor has</span>
+<span class="sd">        no config, so the grouper is restored from the pickled state instead</span>
+<span class="sd">        (see __getstate__); the default groups everything by top-level module.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;config&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">trace_grouper</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;trace_grouper&#39;</span><span class="p">,</span> <span class="n">Grouper</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">stat_group_from_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">calls</span><span class="p">):</span>
+        <span class="n">stat_group</span> <span class="o">=</span> <span class="n">StatGroup</span><span class="p">()</span>
+        <span class="n">stat_group</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="n">stat_group</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grouper</span><span class="p">()(</span><span class="n">func</span><span class="p">)</span>
+        <span class="n">stat_group</span><span class="o">.</span><span class="n">calls</span> <span class="o">=</span> <span class="n">Stat</span><span class="p">(</span><span class="n">calls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">func_count_max</span><span class="p">)</span>
+        <span class="n">stat_group</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">Stat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">func_time</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">func_time_max</span><span class="p">)</span>
+        <span class="n">stat_group</span><span class="o">.</span><span class="n">memory_in</span> <span class="o">=</span> <span class="n">Stat</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_in</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_in_max</span>
+        <span class="p">)</span>
+        <span class="n">stat_group</span><span class="o">.</span><span class="n">memory_out</span> <span class="o">=</span> <span class="n">Stat</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_out</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">func_memory_out_max</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">stat_group</span>
+
+    <span class="k">def</span> <span class="nf">nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">func</span><span class="p">,</span> <span class="n">calls</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">func_count</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">stat_group_from_func</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">calls</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">src_func</span><span class="p">,</span> <span class="n">dests</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">src_func</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">dst_func</span><span class="p">,</span> <span class="n">calls</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">dests</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                <span class="n">edge</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stat_group_from_func</span><span class="p">(</span><span class="n">dst_func</span><span class="p">,</span> <span class="n">calls</span><span class="p">)</span>
+                <span class="n">edge</span><span class="o">.</span><span class="n">src_func</span> <span class="o">=</span> <span class="n">src_func</span>
+                <span class="n">edge</span><span class="o">.</span><span class="n">dst_func</span> <span class="o">=</span> <span class="n">dst_func</span>
+                <span class="k">yield</span> <span class="n">edge</span></div>
+
+
+
+<span class="k">class</span> <span class="nc">Stat</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Stores a &quot;statistic&quot; value, e.g. &quot;time taken&quot; along with the maximum</span>
+<span class="sd">    possible value of the value, which is used to calculate the fraction of 1.</span>
+<span class="sd">    The fraction is used for choosing colors.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">total</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total</span> <span class="o">=</span> <span class="n">total</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fraction</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="n">total</span>
+        <span class="k">except</span> <span class="ne">ZeroDivisionError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fraction</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value_human_bibyte</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Mebibyte of the value in human readable a form.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">Util</span><span class="o">.</span><span class="n">human_readable_bibyte</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">StatGroup</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">def</span> <span class="nf">simple_memoize</span><span class="p">(</span><span class="n">callable_object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Simple memoization for functions without keyword arguments.</span>
+
+<span class="sd">    This is useful for mapping code objects to module in this context.</span>
+<span class="sd">    inspect.getmodule() requires a number of system calls, which may slow down</span>
+<span class="sd">    the tracing considerably. Caching the mapping from code objects (there is</span>
+<span class="sd">    *one* code object for each function, regardless of how many simultaneous</span>
+<span class="sd">    activations records there are).</span>
+
+<span class="sd">    In this context we can ignore keyword arguments, but a generic memoizer</span>
+<span class="sd">    ought to take care of that as well.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">cache</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">rest</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">rest</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
+            <span class="n">cache</span><span class="p">[</span><span class="n">rest</span><span class="p">]</span> <span class="o">=</span> <span class="n">callable_object</span><span class="p">(</span><span class="o">*</span><span class="n">rest</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cache</span><span class="p">[</span><span class="n">rest</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span>
+
+
+<span class="n">inspect</span><span class="o">.</span><span class="n">getmodule</span> <span class="o">=</span> <span class="n">simple_memoize</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getmodule</span><span class="p">)</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Python Call Graph 2.1.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">pycallgraph.tracer</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2007-2024 Gerald Kaszuba, et al..
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>
