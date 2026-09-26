@@ -40,10 +40,11 @@ def test_output_file_default():
 
 def test_memory_values_are_exported_when_enabled(json_output):
     '''
-    With memory tracking on, nodes carry memory_in and memory_out. These are
-    distinct measurements (memory used on entry vs. retained on exit), and the
-    JSON must report the out value in memory_out rather than repeating the in
-    value.
+    With memory tracking on, each node carries the node's memory_in and
+    memory_out statistics. This pins the JSON plumbing only: it must read the
+    StatGroup's memory_in/memory_out (not, say, reuse one value for both). The
+    correctness of the underlying accumulators is covered by the
+    memory-stats regression tests.
     '''
     from pycallgraph.config import Config
 
@@ -56,17 +57,17 @@ def test_memory_values_are_exported_when_enabled(json_output):
     with open(json_output.output_file) as handle:
         document = json.load(handle)
 
-    by_name = {node['name']: node for node in document['nodes']}
-    node = by_name['calls.one_nop']
-    assert 'memory_in' in node
-    assert 'memory_out' in node
-    # The trace allocates something, so at least one figure is non-zero, and
-    # the two fields describe separate accumulators.
     processor = json_output.processor
-    expected_in = processor.func_memory_in['calls.one_nop']
-    expected_out = processor.func_memory_out['calls.one_nop']
-    assert node['memory_in'] == expected_in
-    assert node['memory_out'] == expected_out
+    expected = {
+        node.name: node
+        for node in processor.nodes()
+        if node.name in ('calls.one_nop', 'calls.nop')
+    }
+    by_name = {node['name']: node for node in document['nodes']}
+
+    for name, stat_group in expected.items():
+        assert by_name[name]['memory_in'] == stat_group.memory_in.value
+        assert by_name[name]['memory_out'] == stat_group.memory_out.value
 
 
 def test_document_is_valid_json(json_output):
