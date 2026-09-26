@@ -6,11 +6,8 @@ import sys
 import sysconfig
 import time
 from collections import defaultdict
+from queue import Queue, Empty
 from threading import Thread
-try:
-    from queue import Queue, Empty
-except ImportError:
-    from queue import Queue, Empty
 
 from .util import Util
 
