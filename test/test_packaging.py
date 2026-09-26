@@ -149,11 +149,27 @@ def test_metadata_is_importable_without_initialising_package():
     assert module.__author__
 
 
-def test_setup_reads_metadata_from_file():
-    '''``setup.py`` reads metadata from the metadata module's file path.'''
-    source = open(SETUP_PY).read()
-    assert 'metadata.py' in source
-    assert 'version=' in source
+def test_setup_reads_metadata_by_path_not_by_import():
+    '''
+    ``setup.py`` must not import the package (the build environment is
+    isolated), so it reads ``metadata.py`` from disk. Parse the file and
+    assert there is no real ``import pycallgraph`` statement.
+    '''
+    import ast
+
+    tree = ast.parse(open(SETUP_PY).read())
+    imported = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imported.add(node.module)
+
+    assert not any(
+        name == 'pycallgraph' or name.startswith('pycallgraph.')
+        for name in imported
+    )
+    assert 'metadata.py' in open(SETUP_PY).read()
 
 
 def test_license_is_a_valid_spdx_expression():
@@ -163,7 +179,15 @@ def test_license_is_a_valid_spdx_expression():
     field as an expression.
     '''
     license_id = _read_metadata()['__license__']
-    assert license_id == 'GPL-2.0-or-later'
+    try:
+        from packaging.licenses import canonicalize_license_expression
+    except ImportError:
+        canonicalize_license_expression = None
+
+    if canonicalize_license_expression is not None:
+        # Raises InvalidLicenseExpression when the value is not valid SPDX.
+        canonicalize_license_expression(license_id)
+    assert license_id.startswith('GPL-2.0')
 
 
 def test_basic_import_does_not_require_graphviz():

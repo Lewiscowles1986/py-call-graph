@@ -5,5 +5,5 @@ include setup.py
 recursive-include requirements *.txt
 recursive-include test *.py
 recursive-include docs *
-recursive-include examples *.py
+recursive-include examples *.py *.rst *.html
 include man/pycallgraph.1

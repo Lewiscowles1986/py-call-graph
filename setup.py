@@ -27,8 +27,16 @@ def read_file(name):
 
 def read_metadata():
     '''Read ``pycallgraph/metadata.py`` without importing the package.'''
-    namespace = {}
-    exec(read_file(os.path.join('pycallgraph', 'metadata.py')), namespace)
+    namespace = {'__name__': 'pycallgraph.metadata'}
+    try:
+        exec(
+            read_file(os.path.join('pycallgraph', 'metadata.py')),
+            namespace,
+        )
+    except Exception as error:
+        raise RuntimeError(
+            "Could not read pycallgraph/metadata.py: %s" % error
+        )
     return namespace
 
 
