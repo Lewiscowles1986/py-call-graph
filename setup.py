@@ -43,6 +43,7 @@ setup(
     author=metadata['__author__'],
     author_email=metadata['__email__'],
     license=metadata['__license__'],
+    license_files=['LICENSE'],
     url=metadata['__url__'],
     packages=find_packages(exclude=['test', 'test.*']),
     scripts=['scripts/pycallgraph'],
@@ -63,7 +64,6 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License (GPL)',
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',

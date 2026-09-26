@@ -40,6 +40,13 @@ def _clean_env(**extra):
     return env
 
 
+def _read_metadata():
+    '''Read ``pycallgraph/metadata.py`` by path, as ``setup.py`` does.'''
+    namespace = {}
+    exec(open(METADATA_PY, encoding='utf-8').read(), namespace)
+    return namespace
+
+
 def _setup_tree():
     with open(SETUP_PY) as handle:
         return ast.parse(handle.read(), filename=SETUP_PY)
@@ -81,13 +88,14 @@ def test_egg_info_succeeds_without_script_dir_on_path(tmp_path):
     '''
     Reproduces issue #29 directly.
 
-    ``python -P`` stops CPython from prepending the script's directory to
-    ``sys.path``. ``pip`` and other modern build frontends isolate the build
-    the same way. Packaging metadata generation must still succeed.
+    ``python -I`` (isolated mode) stops CPython from prepending the script's
+    directory to ``sys.path``, which is exactly what pip and other modern build
+    frontends do. ``-I`` exists on every supported interpreter, unlike ``-P``
+    (added in 3.11), so the reproduction also runs on Python 3.8-3.10.
     '''
     result = subprocess.run(
         [
-            sys.executable, '-P', SETUP_PY, 'egg_info',
+            sys.executable, '-I', SETUP_PY, 'egg_info',
             '--egg-base', str(tmp_path),
         ],
         cwd=REPO_ROOT,
@@ -97,6 +105,32 @@ def test_egg_info_succeeds_without_script_dir_on_path(tmp_path):
         text=True,
     )
     assert result.returncode == 0, result.stdout
+
+
+def test_egg_info_reports_the_metadata_version(tmp_path):
+    '''
+    The version in the generated metadata comes from ``metadata.py``, proving
+    the file-path reading path works end to end.
+    '''
+    result = subprocess.run(
+        [
+            sys.executable, '-I', SETUP_PY, 'egg_info',
+            '--egg-base', str(tmp_path),
+        ],
+        cwd=REPO_ROOT,
+        env=_clean_env(),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout
+
+    pkginfo = list(tmp_path.glob('*.egg-info/PKG-INFO'))
+    assert pkginfo, 'no PKG-INFO was generated'
+
+    contents = pkginfo[0].read_text(encoding='utf-8')
+    version = _read_metadata()['__version__']
+    assert 'Version: %s' % version in contents
 
 
 def test_metadata_is_importable_without_initialising_package():
@@ -120,6 +154,16 @@ def test_setup_reads_metadata_from_file():
     source = open(SETUP_PY).read()
     assert 'metadata.py' in source
     assert 'version=' in source
+
+
+def test_license_is_a_valid_spdx_expression():
+    '''
+    PEP 639 requires the ``license`` field to be a valid SPDX expression. A
+    free-text value like ``GPLv2`` is not, and modern setuptools treats the
+    field as an expression.
+    '''
+    license_id = _read_metadata()['__license__']
+    assert license_id == 'GPL-2.0-or-later'
 
 
 def test_basic_import_does_not_require_graphviz():
