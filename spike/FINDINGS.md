@@ -52,6 +52,9 @@ not `CALL` alone. This finding alone justifies the spike.
 
 ### 3. `sys.monitoring` and `sys.settrace` **can run at the same time**
 
+Reproduced by [`spike/coexistence_check.py`](coexistence_check.py)
+(exit code 0 when both tracers observe the call):
+
 ```
 settrace saw:   ['work', 'helper']
 monitoring saw: ['work', 'helper']
@@ -74,7 +77,9 @@ ValueError: tool 1 is already in use
 
 So monitoring-based tools still contend with each other, but on a *different,
 larger* resource than `sys.settrace`, and the failure is an explicit
-exception rather than silent clobbering. The implementation should:
+exception rather than silent clobbering. The prototype currently hard-codes
+`PROFILER_ID` (it does not yet fall back to a free id); the implementation
+should:
 
 - prefer `PROFILER_ID`, fall back to a free id, and
 - raise a clear, actionable error when none is available.

@@ -42,10 +42,12 @@ class SysMonitoringTracer:
     '''
     Minimal call-count tracer built on ``sys.monitoring``.
 
-    Uses the PROFILER tool id, falling back to any free id, and registers
-    CALL + PY_RETURN callbacks. CALL is a global event; PY_RETURN is a local
-    event, enabled per code object via ``set_local_events`` so overhead is
-    limited to code we actually care about.
+    Registers global ``PY_START`` and ``PY_RETURN`` callbacks, which are the
+    per-frame equivalents of settrace's ``call``/``return`` events. This
+    prototype does *not* use ``set_local_events``; scoping is applied per
+    frame in ``_name_for_code`` instead. It also requires the PROFILER tool
+    id and does not fall back to another free id (a limitation noted in
+    FINDINGS.md).
     '''
 
     def __init__(self, config=None):
