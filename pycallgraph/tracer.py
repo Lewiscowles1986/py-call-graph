@@ -10,6 +10,43 @@ from queue import Queue, Empty
 from threading import Thread
 
 from .util import Util
+from .grouper import Grouper
+
+
+def _empty_int_dict():
+    '''Module-level factory so the call graph default can be pickled.'''
+    return defaultdict(int)
+
+
+class ProcessedTraceConfig(object):
+    '''The subset of configuration a *restored* trace still needs.
+
+    Outputs read a handful of settings off ``processor.config`` while
+    rendering (grouping, memory labels, verbosity). A live processor gets a
+    full ``Config``, but that object holds an ``argparse`` parser and cannot
+    be pickled. A dump therefore stores this small, picklable stand-in so a
+    trace loaded later can still be rendered without the original process.
+    '''
+
+    def __init__(self, config=None):
+        if config is not None:
+            self.groups = getattr(config, 'groups', True)
+            self.trace_grouper = getattr(config, 'trace_grouper', Grouper())
+            self.memory = getattr(config, 'memory', False)
+        else:
+            self.groups = True
+            self.trace_grouper = Grouper()
+            self.memory = False
+        self.verbose = False
+        self.debug = False
+
+    def log_verbose(self, text):
+        if self.verbose:
+            print(text)
+
+    def log_debug(self, text):
+        if self.debug:
+            print(text)
 
 
 class SyncronousTracer(object):
@@ -57,6 +94,22 @@ class TraceProcessor(Thread):
     Contains a callback used by sys.settrace, which collects information about
     function call count, time taken, etc.
     '''
+
+    # The subset of state that is meaningful once a trace has finished and
+    # that can safely be pickled. Runtime-only threading state, the open
+    # outputs and the config are deliberately excluded. Keep this in sync
+    # with the counters set up in init_trace_data (see test_pickle.py).
+    _picklable_state = (
+        'call_stack',
+        'func_count',
+        'func_count_max',
+        'func_time',
+        'func_time_max',
+        'func_memory_in',
+        'func_memory_in_max',
+        'func_memory_out',
+        'func_memory_out_max',
+    )
 
     def __init__(self, outputs, config):
         Thread.__init__(self)
@@ -153,7 +206,10 @@ class TraceProcessor(Thread):
             try:
                 data = self.trace_queue.get(timeout=0.1)
             except Empty:
-                pass
+                # Nothing to process yet. Continuing here is important: if
+                # 'data' from the previous iteration were reused, the same
+                # event would be counted twice.
+                continue
             self.process(**data)
 
     def done(self):
@@ -327,21 +383,32 @@ class TraceProcessor(Thread):
         return result
 
     def __getstate__(self):
-        '''Used for when creating a pickle. Certain instance variables can't
-        pickled and aren't used anyway.
-        '''
-        odict = self.__dict__.copy()
-        dont_keep = [
-            'outputs',
-            'config',
-            'updatables',
-            'lib_paths',
-            'is_stdlib_cache',
-        ]
-        for key in dont_keep:
-            del odict[key]
+        '''Return only the collected trace data.
 
-        return odict
+        TraceProcessor subclasses Thread, so the default state includes thread
+        handles, locks, the trace queue and an excepthook closure, none of
+        which can be pickled (and none of which are wanted). The configured
+        outputs and config are dropped for the same reason, so a dump can be
+        loaded without them.
+        '''
+        state = {
+            key: getattr(self, key)
+            for key in self._picklable_state
+            if hasattr(self, key)
+        }
+        # The call graph is normally a defaultdict(lambda: defaultdict(int)),
+        # and a lambda cannot be pickled. Rebuild it with a module-level
+        # factory so the data survives a round trip.
+        state['call_dict'] = defaultdict(
+            _empty_int_dict,
+            {src: defaultdict(int, dests)
+             for src, dests in self.call_dict.items()},
+        )
+        # A restored trace still needs a few settings to render, and the live
+        # config (argparse parser et al) cannot be pickled, so store a small
+        # picklable stand-in instead.
+        state['config'] = ProcessedTraceConfig(getattr(self, 'config', None))
+        return state
 
     def groups(self):
         grp = defaultdict(list)
@@ -350,10 +417,22 @@ class TraceProcessor(Thread):
         for g in list(grp.items()):
             yield g
 
+    def _grouper(self):
+        '''The grouping function used to build nodes/edges.
+
+        A live processor takes it from the config. An unpickled processor has
+        no config, so the grouper is restored from the pickled state instead
+        (see __getstate__); the default groups everything by top-level module.
+        '''
+        config = getattr(self, 'config', None)
+        if config is not None:
+            return config.trace_grouper
+        return getattr(self, 'trace_grouper', Grouper())
+
     def stat_group_from_func(self, func, calls):
         stat_group = StatGroup()
         stat_group.name = func
-        stat_group.group = self.config.trace_grouper(func)
+        stat_group.group = self._grouper()(func)
         stat_group.calls = Stat(calls, self.func_count_max)
         stat_group.time = Stat(self.func_time.get(func, 0), self.func_time_max)
         stat_group.memory_in = Stat(

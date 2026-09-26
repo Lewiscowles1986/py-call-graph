@@ -1,7 +1,4 @@
-try:
-    from . import pickle as pickle
-except ImportError:
-    from . import pickle
+import pickle
 
 from .output import Output
 
@@ -10,7 +7,7 @@ class PickleOutput(Output):
 
     def __init__(self, **kwargs):
         self.fp = None
-        self.output_file = 'pycallgraph.dot'
+        self.output_file = 'pycallgraph.pickle'
         Output.__init__(self, **kwargs)
 
     @classmethod
@@ -31,5 +28,5 @@ class PickleOutput(Output):
         return subparser
 
     def done(self):
-        self.prepare_output_file()
-        pickle.dump(self.tracer, self.fp, pickle.HIGHEST_PROTOCOL)
+        with open(self.normalize_path(self.output_file), 'wb') as handle:
+            pickle.dump(self.processor, handle, pickle.HIGHEST_PROTOCOL)
