@@ -8,8 +8,9 @@ from .exceptions import PyCallGraphException
 
 class PyCallGraph(object):
     def __init__(self, output=None, config=None):
-        '''output can be a single Output instance or an iterable with many
-        of them.  Example usage:
+        '''output can be a single Output instance or a sequence of them.
+        Any other iterable (for example a generator) is materialised here so
+        it can be iterated safely more than once.  Example usage:
 
             PyCallGraph(output=GraphvizOutput(), config=Config())
         '''
@@ -20,7 +21,7 @@ class PyCallGraph(object):
         elif isinstance(output, Output):
             self.output = [output]
         else:
-            self.output = output
+            self.output = list(output)
 
         self.config = config or Config()
 

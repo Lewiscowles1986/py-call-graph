@@ -11,6 +11,12 @@ from threading import Thread
 
 from .util import Util
 from .grouper import Grouper
+from .exceptions import PyCallGraphException
+
+
+#: Sentinel placed on the trace queue to tell the processor thread that
+#: everything queued before it has been processed and it should exit.
+_SHUTDOWN = object()
 
 
 def _empty_int_dict():
@@ -76,6 +82,10 @@ class SyncronousTracer(object):
 
 class AsyncronousTracer(SyncronousTracer):
 
+    #: How long to wait for the trace processor to drain and exit. A stuck
+    #: processor used to block the traced program forever with no diagnostics.
+    shutdown_timeout = 10.0
+
     def start(self):
         self.processor.start()
         SyncronousTracer.start(self)
@@ -86,7 +96,14 @@ class AsyncronousTracer(SyncronousTracer):
 
     def done(self):
         self.processor.done()
-        self.processor.join()
+        self.processor.join(self.shutdown_timeout)
+
+        if self.processor.is_alive():
+            raise PyCallGraphException(
+                'The threaded trace processor did not finish within '
+                '{0} seconds. The trace is incomplete; try running without '
+                'threaded tracing.'.format(self.shutdown_timeout)
+            )
 
 
 class TraceProcessor(Thread):
@@ -112,7 +129,10 @@ class TraceProcessor(Thread):
     )
 
     def __init__(self, outputs, config):
-        Thread.__init__(self)
+        # Daemon so a trace that is never cleanly finished cannot keep the
+        # interpreter alive at exit. A normal run still joins the processor in
+        # AsyncronousTracer.done() before outputs are generated.
+        Thread.__init__(self, daemon=True)
         self.trace_queue = Queue()
         self.keep_going = True
         self.outputs = outputs
@@ -202,20 +222,31 @@ class TraceProcessor(Thread):
         self.trace_queue.put(data)
 
     def run(self):
-        while self.keep_going:
+        while True:
             try:
                 data = self.trace_queue.get(timeout=0.1)
             except Empty:
-                # Nothing to process yet. Continuing here is important: if
-                # 'data' from the previous iteration were reused, the same
-                # event would be counted twice.
+                # Nothing to process yet. If shutdown has been requested and
+                # the queue is genuinely empty, the backlog is drained.
+                if not self.keep_going:
+                    break
                 continue
+
+            if data is _SHUTDOWN:
+                # Sentinel: everything queued before this has been processed.
+                break
+
             self.process(**data)
 
     def done(self):
-        while not self.trace_queue.empty():
-            time.sleep(0.1)
+        '''Ask the processor to finish and exit.
+
+        Everything already queued is still processed, then the worker exits
+        on the sentinel. This replaces a busy-wait on ``queue.empty()`` that
+        spun forever if the worker had already stopped.
+        '''
         self.keep_going = False
+        self.trace_queue.put(_SHUTDOWN)
 
     def process(self, frame, event, arg, memory=None):
         '''This function processes a trace result. Keeps track of
@@ -310,7 +341,7 @@ class TraceProcessor(Thread):
                 )
 
                 self.call_stack.append(full_name)
-                self.call_stack_timer.append(time.time())
+                self.call_stack_timer.append(time.perf_counter())
 
                 if memory is not None:
                     self.call_stack_memory_in.append(memory)
@@ -333,7 +364,7 @@ class TraceProcessor(Thread):
                     start_time = None
 
                 if start_time:
-                    call_time = time.time() - start_time
+                    call_time = time.perf_counter() - start_time
 
                     self.func_time[full_name] += call_time
                     self.func_time_max = max(
