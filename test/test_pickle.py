@@ -32,9 +32,9 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 @pytest.fixture
-def pickle_output(temp):
+def pickle_output(tmp_path):
     output = PickleOutput()
-    output.output_file = temp
+    output.output_file = str(tmp_path / 'pycallgraph.pickle')
     return output
 
 
@@ -134,7 +134,7 @@ def test_pickled_state_covers_the_trace_data():
     assert set(processor.__getstate__()) == expected
 
 
-def test_threaded_trace_does_not_count_calls_twice(temp):
+def test_threaded_trace_does_not_count_calls_twice(tmp_path):
     '''
     The threaded tracer hands events to a worker thread. If the worker reuses
     a previously dequeued event when the queue is briefly empty, calls are
@@ -143,6 +143,7 @@ def test_threaded_trace_does_not_count_calls_twice(temp):
     from pycallgraph.config import Config
     from pycallgraph.tracer import AsyncronousTracer
 
+    temp = str(tmp_path / 'threaded.pickle')
     output = PickleOutput()
     output.output_file = temp
     config = Config()
@@ -161,7 +162,7 @@ def test_threaded_trace_does_not_count_calls_twice(temp):
     assert loaded.func_count['calls.nop'] == 1
 
 
-def test_pickle_output_is_selectable_from_the_command_line(temp):
+def test_pickle_output_is_selectable_from_the_command_line(tmp_path):
     '''
     The output class existed but was never registered, so the documented
     'pickle' output mode was rejected by the argument parser. Guard against
@@ -169,7 +170,8 @@ def test_pickle_output_is_selectable_from_the_command_line(temp):
     '''
     assert 'pickle' in outputters
 
-    script_path = temp + '.py'
+    temp = str(tmp_path / 'cli.pickle')
+    script_path = str(tmp_path / 'cli_script.py')
     with open(script_path, 'w') as handle:
         handle.write(
             'def nop():\n'
