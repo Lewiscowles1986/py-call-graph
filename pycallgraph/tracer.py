@@ -111,25 +111,36 @@ class TraceProcessor(Thread):
         *real* path via ``__file__``, so both the logical and the resolved
         paths are recorded to keep detection working on symlinked installs.
         '''
-        paths = set()
+        paths = []
         for key in ('stdlib', 'platstdlib', 'purelib', 'platlib'):
             try:
                 path = sysconfig.get_path(key)
             except KeyError:
                 path = None
             if path:
-                paths.add(path)
+                paths.append(path)
 
         libdest = sysconfig.get_config_var('LIBDEST')
         if libdest:
-            paths.add(libdest)
+            paths.append(libdest)
 
+        # Normalise to absolute, resolved (symlink-free) paths. A separator
+        # suffix makes the lookup a proper path-boundary test rather than a
+        # bare string prefix test, so '/usr/lib/python3.13-extra/x.py' is not
+        # mistaken for a module inside '/usr/lib/python3.13'.
         self.lib_paths = []
         for path in paths:
             for candidate in (path, os.path.realpath(path)):
-                lowered = candidate.lower()
-                if lowered not in self.lib_paths:
-                    self.lib_paths.append(lowered)
+                candidate = os.path.join(
+                    os.path.abspath(candidate), ''
+                ).lower()
+                if candidate not in self.lib_paths:
+                    self.lib_paths.append(candidate)
+
+        # Cache of file name -> bool. is_module_stdlib runs for every 'call'
+        # event, and each miss costs syscalls (lstat/readlink in realpath), so
+        # results are memoized exactly as inspect.getmodule is above.
+        self.is_stdlib_cache = {}
 
     def queue(self, frame, event, arg, memory):
         data = {
@@ -296,11 +307,18 @@ class TraceProcessor(Thread):
         Returns True if the file_name is in a known lib directory.
         Used to check if a function is in the standard library or not.
         '''
-        file_name = os.path.realpath(file_name).lower()
-        return any([
-            file_name.startswith(lib_path)
+        try:
+            return self.is_stdlib_cache[file_name]
+        except KeyError:
+            pass
+
+        resolved = os.path.realpath(file_name).lower()
+        result = any([
+            resolved.startswith(lib_path)
             for lib_path in self.lib_paths
         ])
+        self.is_stdlib_cache[file_name] = result
+        return result
 
     def __getstate__(self):
         '''Used for when creating a pickle. Certain instance variables can't
@@ -312,6 +330,7 @@ class TraceProcessor(Thread):
             'config',
             'updatables',
             'lib_paths',
+            'is_stdlib_cache',
         ]
         for key in dont_keep:
             del odict[key]

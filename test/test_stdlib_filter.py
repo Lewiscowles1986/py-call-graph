@@ -84,3 +84,45 @@ def test_non_library_module_is_not_detected(trace_processor, tmp_path):
     user_module.write_text('')
 
     assert not trace_processor.is_module_stdlib(str(user_module))
+
+
+def test_sibling_directory_with_shared_prefix_is_not_library(trace_processor):
+    '''
+    Regression: detection must match on path boundaries, not raw string
+    prefixes. A directory like ``.../lib/python3.13-extra`` is not inside
+    ``.../lib/python3.13`` and must not be treated as library code.
+    '''
+    stdlib = os.path.realpath(sysconfig.get_path('stdlib'))
+    sibling = stdlib + '-extra' + os.sep + 'module.py'
+
+    assert not trace_processor.is_module_stdlib(sibling)
+
+
+def test_lib_paths_are_absolute_and_boundary_terminated(trace_processor):
+    '''
+    Each recorded library path is absolute and ends with a separator so that
+    prefix comparisons cannot match a sibling directory.
+    '''
+    assert trace_processor.lib_paths
+    for lib_path in trace_processor.lib_paths:
+        assert os.path.isabs(lib_path)
+        assert lib_path.endswith(os.sep)
+
+
+def test_results_are_cached(trace_processor):
+    '''Repeated lookups reuse a cache instead of re-resolving the path.'''
+    stdlib = sysconfig.get_path('stdlib')
+    target = os.path.join(stdlib, 'os.py')
+
+    assert trace_processor.is_module_stdlib(target)
+    assert trace_processor.is_stdlib_cache[target] is True
+
+
+def test_getstate_does_not_raise(trace_processor):
+    '''
+    ``__getstate__`` (used by PickleOutput) must not raise. The previous code
+    deleted a key named ``'lib_path'`` which never existed, so pickling a
+    processor crashed with KeyError.
+    '''
+    state = trace_processor.__getstate__()
+    assert 'lib_paths' not in state
