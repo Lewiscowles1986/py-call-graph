@@ -18,6 +18,37 @@ def _empty_int_dict():
     return defaultdict(int)
 
 
+class ProcessedTraceConfig(object):
+    '''The subset of configuration a *restored* trace still needs.
+
+    Outputs read a handful of settings off ``processor.config`` while
+    rendering (grouping, memory labels, verbosity). A live processor gets a
+    full ``Config``, but that object holds an ``argparse`` parser and cannot
+    be pickled. A dump therefore stores this small, picklable stand-in so a
+    trace loaded later can still be rendered without the original process.
+    '''
+
+    def __init__(self, config=None):
+        if config is not None:
+            self.groups = getattr(config, 'groups', True)
+            self.trace_grouper = getattr(config, 'trace_grouper', Grouper())
+            self.memory = getattr(config, 'memory', False)
+        else:
+            self.groups = True
+            self.trace_grouper = Grouper()
+            self.memory = False
+        self.verbose = False
+        self.debug = False
+
+    def log_verbose(self, text):
+        if self.verbose:
+            print(text)
+
+    def log_debug(self, text):
+        if self.debug:
+            print(text)
+
+
 class SyncronousTracer(object):
 
     def __init__(self, outputs, config):
@@ -373,9 +404,10 @@ class TraceProcessor(Thread):
             {src: defaultdict(int, dests)
              for src, dests in self.call_dict.items()},
         )
-        # The grouper is a plain list of patterns, so it survives pickling and
-        # lets a consumer rebuild nodes/edges without the original config.
-        state['trace_grouper'] = self._grouper()
+        # A restored trace still needs a few settings to render, and the live
+        # config (argparse parser et al) cannot be pickled, so store a small
+        # picklable stand-in instead.
+        state['config'] = ProcessedTraceConfig(getattr(self, 'config', None))
         return state
 
     def groups(self):

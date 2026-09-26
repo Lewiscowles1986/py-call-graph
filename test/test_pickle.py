@@ -23,6 +23,8 @@ import pytest
 from pycallgraph import PyCallGraph
 from pycallgraph.tracer import TraceProcessor
 from pycallgraph.output import outputters
+from pycallgraph.output.gephi import GephiOutput
+from pycallgraph.output.graphviz import GraphvizOutput
 from pycallgraph.output.pickle import PickleOutput
 from calls import one_nop
 
@@ -61,16 +63,22 @@ def test_pickle_output_round_trips_the_trace(pickle_output):
 
 def test_pickle_output_omits_unpicklable_state(pickle_output):
     '''
-    Outputs, config and the open file handle cannot (and need not) be pickled.
-    The dumped object must therefore not carry them.
+    Outputs, the live config (it holds an argparse parser) and the open file
+    handle cannot be pickled. The dumped object must carry the trace data and
+    a small, picklable config stand-in instead.
     '''
     path = _record(pickle_output)
 
     with open(path, 'rb') as handle:
         loaded = pickle.load(handle)
 
-    for attribute in ('outputs', 'config', 'updatables', 'lib_paths'):
+    for attribute in ('outputs', 'updatables', 'lib_paths', 'is_stdlib_cache'):
         assert not hasattr(loaded, attribute)
+
+    # 'config' is restored, but not the live Config object.
+    from pycallgraph.config import Config
+    assert hasattr(loaded, 'config')
+    assert not isinstance(loaded.config, Config)
 
 
 def test_loaded_trace_can_still_render(pickle_output):
@@ -91,6 +99,29 @@ def test_loaded_trace_can_still_render(pickle_output):
     assert ('calls.one_nop', 'calls.nop') in edges
 
 
+@pytest.mark.parametrize('output_cls', [GraphvizOutput, GephiOutput])
+def test_loaded_trace_can_be_rendered_by_an_output(
+        pickle_output, tmp_path, output_cls):
+    '''
+    The real 'generation later' path: take a dump produced in one process,
+    load it, and drive a normal output from it. This is what a user does to
+    re-render a graph without re-running their program, and it used to fail
+    with AttributeError: 'TraceProcessor' object has no attribute 'config'.
+    '''
+    path = _record(pickle_output)
+
+    with open(path, 'rb') as handle:
+        loaded = pickle.load(handle)
+
+    rendered = str(tmp_path / 'rendered.out')
+    output = output_cls()
+    output.output_file = rendered
+    output.set_processor(loaded)
+    output.done()
+
+    assert os.path.getsize(rendered) > 0
+
+
 def test_pickled_state_covers_the_trace_data():
     '''
     __getstate__ uses an allowlist, so a counter added to init_trace_data is
@@ -99,7 +130,7 @@ def test_pickled_state_covers_the_trace_data():
     from pycallgraph.config import Config
 
     processor = TraceProcessor([], Config())
-    expected = set(processor._picklable_state) | {'call_dict', 'trace_grouper'}
+    expected = set(processor._picklable_state) | {'call_dict', 'config'}
     assert set(processor.__getstate__()) == expected
 
 
