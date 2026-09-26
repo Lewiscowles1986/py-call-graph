@@ -1,7 +1,9 @@
 include Makefile
 include LICENSE
-include requirements
-include test
+include README.md
+include setup.py
+recursive-include requirements *.txt
+recursive-include test *.py
 recursive-include docs *
-include examples/*.py
+recursive-include examples *.py *.rst *.html
 include man/pycallgraph.1
