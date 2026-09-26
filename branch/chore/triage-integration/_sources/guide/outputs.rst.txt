@@ -38,6 +38,9 @@ The document is versioned and contains ``nodes`` and ``edges``:
       ]
     }
 
+Edge endpoints are named ``source``/``target`` (Gephi's GDF output calls
+the same fields ``node1``/``node2``).
+
 Pickle
 ======
 
@@ -56,5 +59,4 @@ This output persists the completed trace so it can be loaded and rendered later 
         print(node.name, node.calls.value)
 
 Only the collected trace data is persisted; the configuration and outputs are not, so a loaded trace groups functions by top-level module by default.
-
 .. todo:: Expand this section with screenshots and examples.

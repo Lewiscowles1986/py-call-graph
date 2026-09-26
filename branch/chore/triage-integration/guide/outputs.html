@@ -72,6 +72,8 @@
 <span class="p">}</span>
 </pre></div>
 </div>
+<p>Edge endpoints are named <code class="docutils literal notranslate"><span class="pre">source</span></code>/<code class="docutils literal notranslate"><span class="pre">target</span></code> (Gephi’s GDF output calls
+the same fields <code class="docutils literal notranslate"><span class="pre">node1</span></code>/<code class="docutils literal notranslate"><span class="pre">node2</span></code>).</p>
 </section>
 <section id="pickle">
 <h2>Pickle<a class="headerlink" href="#pickle" title="Link to this heading">¶</a></h2>
@@ -86,11 +88,8 @@
     <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">calls</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Only the collected trace data is persisted; the configuration and outputs are not, so a loaded trace groups functions by top-level module by default.</p>
-<div class="admonition-todo admonition" id="id4">
-<p class="admonition-title">Todo</p>
-<p>Expand this section with screenshots and examples.</p>
-</div>
+<p>Only the collected trace data is persisted; the configuration and outputs are not, so a loaded trace groups functions by top-level module by default.
+.. todo:: Expand this section with screenshots and examples.</p>
 </section>
 </section>
 
