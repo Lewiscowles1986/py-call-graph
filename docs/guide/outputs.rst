@@ -38,4 +38,7 @@ The document is versioned and contains ``nodes`` and ``edges``:
       ]
     }
 
+Edge endpoints are named ``source``/``target`` (Gephi's GDF output calls
+the same fields ``node1``/``node2``).
+
 .. todo:: Expand this section with screenshots and examples.
