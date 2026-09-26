@@ -5,6 +5,7 @@ import os
 import sys
 import sysconfig
 import time
+import warnings
 from collections import defaultdict
 from queue import Queue, Empty
 from threading import Thread
@@ -60,15 +61,41 @@ class SyncronousTracer(object):
     def __init__(self, outputs, config):
         self.processor = TraceProcessor(outputs, config)
         self.config = config
+        # Set once this tracer has reported that the memory backend cannot
+        # measure, so the warning is not repeated for every traced event.
+        self._memory_backend_warned = False
 
     def tracer(self, frame, event, arg):
         self.processor.process(frame, event, arg, self.memory())
         return self.tracer
 
     def memory(self):
-        if self.config.memory:
-            from .memory_profiler import memory_usage
-            return int(memory_usage(-1, 0)[0] * 1000000)
+        '''Return the current memory usage in bytes, or None if disabled.
+
+        A negative reading from ``memory_usage`` means "could not measure"
+        (for example ``ps v`` on macOS has no RSS column). That is reported as
+        ``None`` so it is not published as a real, negative figure, and the
+        reason is logged once rather than on every traced event.
+        '''
+        if not self.config.memory:
+            return None
+
+        from .memory_profiler import memory_usage
+
+        sample = memory_usage(-1, 0)[0]
+        if sample < 0:
+            if not self._memory_backend_warned:
+                self._memory_backend_warned = True
+                warnings.warn(
+                    'Memory usage could not be measured on this platform: the '
+                    'memory backend returned -1, which usually means the '
+                    'psutil module is missing and no usable ps backend is '
+                    'available. Memory statistics will be omitted. Installing '
+                    'psutil may help.'
+                )
+            return None
+
+        return int(sample * 1000000)
 
     def start(self):
         sys.settrace(self.tracer)
