@@ -280,26 +280,6 @@ class TraceProcessor(Thread):
         relationships between calls.
         '''
 
-        if memory is not None and self.previous_event_return:
-            # Deal with memory when function has finished so local variables
-            # can be cleaned up
-            self.previous_event_return = False
-
-            if self.call_stack_memory_out:
-                full_name, m = self.call_stack_memory_out.pop(-1)
-            else:
-                full_name, m = (None, None)
-
-            # NOTE: Call stack is no longer the call stack that may be
-            # expected. Potentially need to store a copy of it.
-            if full_name and m:
-                call_memory = memory - m
-
-                self.func_memory_out[full_name] += call_memory
-                self.func_memory_out_max = max(
-                    self.func_memory_out_max, self.func_memory_out[full_name]
-                )
-
         if event == 'call':
             keep = True
             code = frame.f_code
@@ -375,8 +355,17 @@ class TraceProcessor(Thread):
                     self.call_stack_memory_out.append([full_name, memory])
 
             else:
+                # Keep all four stacks in step so a return can pop them
+                # positionally. Filtered frames push sentinels onto every
+                # stack; previously the memory stacks were skipped, which
+                # attributed memory to the wrong function whenever --memory
+                # was combined with a filter or --max-depth.
                 self.call_stack.append('')
                 self.call_stack_timer.append(None)
+
+                if memory is not None:
+                    self.call_stack_memory_in.append(None)
+                    self.call_stack_memory_out.append(None)
 
         if event == 'return':
 
@@ -399,12 +388,15 @@ class TraceProcessor(Thread):
                     )
 
                 if memory is not None:
+                    # Pop unconditionally so the stacks cannot drift. An entry
+                    # is None for a filtered frame; a measured value of 0 is a
+                    # real reading and must not be treated as "no data".
                     if self.call_stack_memory_in:
                         start_mem = self.call_stack_memory_in.pop(-1)
                     else:
                         start_mem = None
 
-                    if start_mem:
+                    if start_mem is not None:
                         call_memory = memory - start_mem
                         self.func_memory_in[full_name] += call_memory
 
@@ -412,6 +404,24 @@ class TraceProcessor(Thread):
                             self.func_memory_in_max,
                             self.func_memory_in[full_name],
                         )
+
+                    if self.call_stack_memory_out:
+                        entry = self.call_stack_memory_out.pop(-1)
+                    else:
+                        entry = None
+
+                    # Compute memory-out here, at return time, rather than
+                    # relying on a global flag tied to the previous event,
+                    # which desynchronised the stack when a reading was 0.
+                    if entry is not None:
+                        out_name, out_mem = entry
+                        if out_mem is not None:
+                            out_memory = memory - out_mem
+                            self.func_memory_out[out_name] += out_memory
+                            self.func_memory_out_max = max(
+                                self.func_memory_out_max,
+                                self.func_memory_out[out_name],
+                            )
 
     def is_module_stdlib(self, file_name):
         '''
