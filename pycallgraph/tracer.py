@@ -170,8 +170,6 @@ class TraceProcessor(Thread):
         self.init_libpath()
 
     def init_trace_data(self):
-        self.previous_event_return = False
-
         # A mapping of which function called which other function
         self.call_dict = defaultdict(lambda: defaultdict(int))
 
@@ -368,8 +366,6 @@ class TraceProcessor(Thread):
                     self.call_stack_memory_out.append(None)
 
         if event == 'return':
-
-            self.previous_event_return = True
 
             if self.call_stack:
                 full_name = self.call_stack.pop(-1)
