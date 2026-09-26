@@ -234,7 +234,7 @@ class TraceProcessor(Thread):
 
         # Cache of file name -> bool. is_module_stdlib runs for every 'call'
         # event, and each miss costs syscalls (lstat/readlink in realpath), so
-        # results are memoized exactly as inspect.getmodule is above.
+        # results are memoized by the same idea as _module_for_code above.
         self.is_stdlib_cache = {}
 
     def queue(self, frame, event, arg, memory):
@@ -286,7 +286,7 @@ class TraceProcessor(Thread):
             full_name_list = []
 
             # Work out the module name
-            module = inspect.getmodule(code)
+            module = _module_for_code(code)
             if module:
                 module_name = module.__name__
                 try:
@@ -546,27 +546,26 @@ class StatGroup(object):
     pass
 
 
-def simple_memoize(callable_object):
-    '''Simple memoization for functions without keyword arguments.
+#: Cache of code object -> module, used by ``_module_for_code``.
+#:
+#: ``inspect.getmodule`` costs several syscalls and runs on every traced
+#: 'call' event. There is exactly one code object per function, so the mapping
+#: is stable and worth memoizing. This used to be installed by assigning
+#: ``inspect.getmodule = simple_memoize(inspect.getmodule)``, which patched the
+#: standard library process-wide as a side effect of importing pycallgraph.
+#: The cache is kept private to the tracer instead.
+_module_cache = {}
 
-    This is useful for mapping code objects to module in this context.
-    inspect.getmodule() requires a number of system calls, which may slow down
-    the tracing considerably. Caching the mapping from code objects (there is
-    *one* code object for each function, regardless of how many simultaneous
-    activations records there are).
 
-    In this context we can ignore keyword arguments, but a generic memoizer
-    ought to take care of that as well.
+def _module_for_code(code):
+    '''Return the module a code object belongs to, memoized.
+
+    Safe to call repeatedly: the code object -> module mapping does not change
+    for the lifetime of the process.
     '''
-
-    cache = dict()
-
-    def wrapper(*rest):
-        if rest not in cache:
-            cache[rest] = callable_object(*rest)
-        return cache[rest]
-
-    return wrapper
-
-
-inspect.getmodule = simple_memoize(inspect.getmodule)
+    try:
+        return _module_cache[code]
+    except KeyError:
+        module = inspect.getmodule(code)
+        _module_cache[code] = module
+        return module
