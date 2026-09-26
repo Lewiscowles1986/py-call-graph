@@ -34,8 +34,7 @@
           <div class="body" role="main">
             
   <h1>Source code for pycallgraph.output.output</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">os</span>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">which</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 
@@ -155,13 +154,16 @@
             <span class="sa">f</span><span class="s1">&#39;The command &quot;</span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s1">&quot;</span><span class="si">{</span><span class="n">pkg_str</span><span class="si">}</span><span class="s1"> is required to be in your path.&#39;</span>
         <span class="p">)</span>
 
+<div class="viewcode-block" id="Output.normalize_path">
+<a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.Output.normalize_path">[docs]</a>
     <span class="k">def</span> <span class="nf">normalize_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
-        <span class="n">regex_user_expand</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\A~&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">regex_user_expand</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expandvars</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>  <span class="c1"># expand, just in case</span>
-        <span class="k">return</span> <span class="n">path</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Expand both ``~`` and environment variables in ``path``.</span>
+
+<span class="sd">        A path may legitimately use both forms (``~/graphs/$RUN.json``), so</span>
+<span class="sd">        each expansion is applied in turn rather than choosing between them.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expandvars</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">))</span></div>
+
 
     <span class="k">def</span> <span class="nf">prepare_output_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

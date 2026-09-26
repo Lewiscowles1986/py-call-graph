@@ -60,7 +60,7 @@ Please give more ideas for problems or further use-cases for this repo. I am rea
 <h3>Project Status<a class="headerlink" href="#project-status" title="Link to this heading">¶</a></h3>
 <p>The latest version is <strong>2.1.6</strong> which was released on 2025-06-06.
 The latest version has been tested running on Python versions 3.8 - 3.14</p>
-<p>The <a class="reference external" href="https://github.com/lewiscowles1986/py-call-graph/#python-call-graph">project lives on GitHub</a>, where you can <a class="reference external" href="https://github.com/lewiscowles1986/py-call-graph/issues">report issues</a>, contribute to the project by <a class="reference external" href="https://help.github.com/articles/fork-a-repo">forking the project</a> then creating a <a class="reference external" href="https://help.github.com/articles/using-pull-requests">pull request</a>, or just <a class="reference external" href="https://github.com/lewiscowles1986/py-call-graph/">browse the source code</a>.</p>
+<p>The <a class="reference external" href="https://github.com/Lewiscowles1986/py-call-graph/#python-call-graph">project lives on GitHub</a>, where you can <a class="reference external" href="https://github.com/Lewiscowles1986/py-call-graph/issues">report issues</a>, contribute to the project by <a class="reference external" href="https://help.github.com/articles/fork-a-repo">forking the project</a> then creating a <a class="reference external" href="https://help.github.com/articles/using-pull-requests">pull request</a>, or just <a class="reference external" href="https://github.com/Lewiscowles1986/py-call-graph/">browse the source code</a>.</p>
 <p>The documentation needs some work stiil. Feel free to contribute :smile:</p>
 </section>
 <section id="features">
@@ -192,16 +192,39 @@ small, self-contained example.</p></li>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api/output.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">output.Output</span></code> — Base class for all output modules</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api/output.html#pycallgraph.output.Output"><code class="docutils literal notranslate"><span class="pre">Output</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/output.html#concrete-outputs">Concrete outputs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/output.html#writing-your-own-output">Writing your own output</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="api/globbing_filter.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">globbing_filter.GlobbingFilter</span></code> — Class used for filtering methods</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/globbing_filter.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">globbing_filter.GlobbingFilter</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api/globbing_filter.html#pycallgraph.globbing_filter.GlobbingFilter"><code class="docutils literal notranslate"><span class="pre">GlobbingFilter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/globbing_filter.html#grouper-grouper"><code class="xref py py-class docutils literal notranslate"><span class="pre">grouper.Grouper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/globbing_filter.html#pycallgraph.grouper.Grouper"><code class="docutils literal notranslate"><span class="pre">Grouper</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/internal.html">Internal Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/tracer.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/tracer.html#asyncronoustracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncronousTracer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/tracer.html#traceprocessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">TraceProcessor</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api/internal.html">Internal Classes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/tracer.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/tracer.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/tracer.html#pycallgraph.tracer.SyncronousTracer"><code class="docutils literal notranslate"><span class="pre">SyncronousTracer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/tracer.html#asyncronoustracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncronousTracer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/tracer.html#pycallgraph.tracer.AsyncronousTracer"><code class="docutils literal notranslate"><span class="pre">AsyncronousTracer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/tracer.html#traceprocessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">TraceProcessor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/tracer.html#pycallgraph.tracer.TraceProcessor"><code class="docutils literal notranslate"><span class="pre">TraceProcessor</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

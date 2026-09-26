@@ -16,7 +16,7 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="globbing_filter.GlobbingFilter — Class used for filtering methods" href="globbing_filter.html" />
+    <link rel="next" title="globbing_filter.GlobbingFilter" href="globbing_filter.html" />
     <link rel="prev" title="PyCallGraph — Main interface to Python Call Graph" href="pycallgraph.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -26,7 +26,7 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="globbing_filter.html" title="globbing_filter.GlobbingFilter — Class used for filtering methods"
+          <a href="globbing_filter.html" title="globbing_filter.GlobbingFilter"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="pycallgraph.html" title="PyCallGraph — Main interface to Python Call Graph"
@@ -44,6 +44,9 @@
             
   <section id="output-output-base-class-for-all-output-modules">
 <span id="output"></span><h1><code class="xref py py-class docutils literal notranslate"><span class="pre">output.Output</span></code> — Base class for all output modules<a class="headerlink" href="#output-output-base-class-for-all-output-modules" title="Link to this heading">¶</a></h1>
+<p>Every output module subclasses <a class="reference internal" href="#pycallgraph.output.Output" title="pycallgraph.output.Output"><code class="xref py py-class docutils literal notranslate"><span class="pre">pycallgraph.output.Output</span></code></a> and
+implements <a class="reference internal" href="#pycallgraph.output.Output.done" title="pycallgraph.output.Output.done"><code class="xref py py-meth docutils literal notranslate"><span class="pre">done()</span></code></a> to write the collected
+trace out in its own format.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="pycallgraph.output.Output">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pycallgraph.output.</span></span><span class="sig-name descname"><span class="pre">Output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/output.html#Output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.Output" title="Link to this definition">¶</a></dt>
@@ -52,6 +55,14 @@
 <dt class="sig sig-object py" id="pycallgraph.output.Output.done">
 <span class="sig-name descname"><span class="pre">done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/output.html#Output.done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.Output.done" title="Link to this definition">¶</a></dt>
 <dd><p>Called when the trace is complete and ready to be saved.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.output.Output.normalize_path">
+<span class="sig-name descname"><span class="pre">normalize_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/output.html#Output.normalize_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.Output.normalize_path" title="Link to this definition">¶</a></dt>
+<dd><p>Expand both <code class="docutils literal notranslate"><span class="pre">~</span></code> and environment variables in <code class="docutils literal notranslate"><span class="pre">path</span></code>.</p>
+<p>A path may legitimately use both forms (<code class="docutils literal notranslate"><span class="pre">~/graphs/$RUN.json</span></code>), so
+each expansion is applied in turn rather than choosing between them.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -89,6 +100,123 @@ set to True.</p>
 
 </dd></dl>
 
+<section id="concrete-outputs">
+<h2>Concrete outputs<a class="headerlink" href="#concrete-outputs" title="Link to this heading">¶</a></h2>
+<p>These are the outputs registered by default and selectable from the command
+line. See <a class="reference internal" href="../guide/outputs.html#outputs"><span class="std std-ref">Outputs</span></a> in the guide for what each one produces.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pycallgraph.output.GraphvizOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pycallgraph.output.</span></span><span class="sig-name descname"><span class="pre">GraphvizOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/graphviz.html#GraphvizOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.GraphvizOutput" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.output.GraphvizOutput.done">
+<span class="sig-name descname"><span class="pre">done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/graphviz.html#GraphvizOutput.done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.GraphvizOutput.done" title="Link to this definition">¶</a></dt>
+<dd><p>Called when the trace is complete and ready to be saved.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.output.GraphvizOutput.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/graphviz.html#GraphvizOutput.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.GraphvizOutput.generate" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a string with the contents of a DOT file for Graphviz to
+parse.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.output.GraphvizOutput.sanity_check">
+<span class="sig-name descname"><span class="pre">sanity_check</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/graphviz.html#GraphvizOutput.sanity_check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.GraphvizOutput.sanity_check" title="Link to this definition">¶</a></dt>
+<dd><p>Basic checks for certain libraries or external applications.  Raise
+or warn if there is a problem.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pycallgraph.output.GephiOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pycallgraph.output.</span></span><span class="sig-name descname"><span class="pre">GephiOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/gephi.html#GephiOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.GephiOutput" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.output.GephiOutput.done">
+<span class="sig-name descname"><span class="pre">done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/gephi.html#GephiOutput.done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.GephiOutput.done" title="Link to this definition">¶</a></dt>
+<dd><p>Called when the trace is complete and ready to be saved.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.output.GephiOutput.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/gephi.html#GephiOutput.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.GephiOutput.generate" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a string with the contents of a GDF file.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pycallgraph.output.JSONOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pycallgraph.output.</span></span><span class="sig-name descname"><span class="pre">JSONOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/json.html#JSONOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.JSONOutput" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.output.JSONOutput.done">
+<span class="sig-name descname"><span class="pre">done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/json.html#JSONOutput.done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.JSONOutput.done" title="Link to this definition">¶</a></dt>
+<dd><p>Called when the trace is complete and ready to be saved.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.output.JSONOutput.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/json.html#JSONOutput.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.JSONOutput.generate" title="Link to this definition">¶</a></dt>
+<dd><p>Return the JSON document as a pretty-printed string.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pycallgraph.output.JSONOutput.schema_version">
+<span class="sig-name descname"><span class="pre">schema_version</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#pycallgraph.output.JSONOutput.schema_version" title="Link to this definition">¶</a></dt>
+<dd><p>Bumped whenever the document shape changes incompatibly.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pycallgraph.output.PickleOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pycallgraph.output.</span></span><span class="sig-name descname"><span class="pre">PickleOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/pickle.html#PickleOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.PickleOutput" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.output.PickleOutput.done">
+<span class="sig-name descname"><span class="pre">done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/output/pickle.html#PickleOutput.done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.output.PickleOutput.done" title="Link to this definition">¶</a></dt>
+<dd><p>Called when the trace is complete and ready to be saved.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="writing-your-own-output">
+<h2>Writing your own output<a class="headerlink" href="#writing-your-own-output" title="Link to this heading">¶</a></h2>
+<p>Subclass <a class="reference internal" href="#pycallgraph.output.Output" title="pycallgraph.output.Output"><code class="xref py py-class docutils literal notranslate"><span class="pre">pycallgraph.output.Output</span></code></a>, implement <code class="docutils literal notranslate"><span class="pre">done()</span></code>, and pass an
+instance to <a class="reference internal" href="pycallgraph.html#pycallgraph.PyCallGraph" title="pycallgraph.PyCallGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">pycallgraph.PyCallGraph</span></code></a> (or to the <code class="docutils literal notranslate"><span class="pre">trace</span></code> decorator):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pycallgraph</span> <span class="kn">import</span> <span class="n">PyCallGraph</span>
+<span class="kn">from</span> <span class="nn">pycallgraph.output</span> <span class="kn">import</span> <span class="n">Output</span>
+
+
+<span class="k">class</span> <span class="nc">LengthOutput</span><span class="p">(</span><span class="n">Output</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Print how many functions were traced.&#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">Output</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">(</span><span class="s1">&#39;traced </span><span class="si">{0}</span><span class="s1"> functions&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">call_dict</span><span class="p">)))</span>
+
+
+<span class="k">with</span> <span class="n">PyCallGraph</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="n">LengthOutput</span><span class="p">()):</span>
+    <span class="n">my_main_function</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Useful attributes available in <code class="docutils literal notranslate"><span class="pre">done()</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">self.processor</span></code> – the <a class="reference internal" href="tracer.html#pycallgraph.tracer.TraceProcessor" title="pycallgraph.tracer.TraceProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">TraceProcessor</span></code></a> that
+holds the collected statistics.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">self.output_file</span></code> – set it (usually from a <code class="docutils literal notranslate"><span class="pre">--output-file</span></code> argument)
+and call <a class="reference internal" href="#pycallgraph.output.Output.normalize_path" title="pycallgraph.output.Output.normalize_path"><code class="xref py py-meth docutils literal notranslate"><span class="pre">normalize_path()</span></code></a> before opening it,
+so <code class="docutils literal notranslate"><span class="pre">~</span></code> and environment variables are expanded.</p></li>
+</ul>
+<p>Register a class in <code class="docutils literal notranslate"><span class="pre">pycallgraph.output.outputters</span></code> if it should also be
+selectable from the command line. Implement <code class="docutils literal notranslate"><span class="pre">add_arguments</span></code> to declare its
+own options.</p>
+</section>
 </section>
 
 
@@ -104,6 +232,7 @@ set to True.</p>
 <li><a class="reference internal" href="#"><code class="xref py py-class docutils literal notranslate"><span class="pre">output.Output</span></code> — Base class for all output modules</a><ul>
 <li><a class="reference internal" href="#pycallgraph.output.Output"><code class="docutils literal notranslate"><span class="pre">Output</span></code></a><ul>
 <li><a class="reference internal" href="#pycallgraph.output.Output.done"><code class="docutils literal notranslate"><span class="pre">Output.done()</span></code></a></li>
+<li><a class="reference internal" href="#pycallgraph.output.Output.normalize_path"><code class="docutils literal notranslate"><span class="pre">Output.normalize_path()</span></code></a></li>
 <li><a class="reference internal" href="#pycallgraph.output.Output.sanity_check"><code class="docutils literal notranslate"><span class="pre">Output.sanity_check()</span></code></a></li>
 <li><a class="reference internal" href="#pycallgraph.output.Output.set_config"><code class="docutils literal notranslate"><span class="pre">Output.set_config()</span></code></a></li>
 <li><a class="reference internal" href="#pycallgraph.output.Output.should_update"><code class="docutils literal notranslate"><span class="pre">Output.should_update()</span></code></a></li>
@@ -111,6 +240,31 @@ set to True.</p>
 <li><a class="reference internal" href="#pycallgraph.output.Output.update"><code class="docutils literal notranslate"><span class="pre">Output.update()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#concrete-outputs">Concrete outputs</a><ul>
+<li><a class="reference internal" href="#pycallgraph.output.GraphvizOutput"><code class="docutils literal notranslate"><span class="pre">GraphvizOutput</span></code></a><ul>
+<li><a class="reference internal" href="#pycallgraph.output.GraphvizOutput.done"><code class="docutils literal notranslate"><span class="pre">GraphvizOutput.done()</span></code></a></li>
+<li><a class="reference internal" href="#pycallgraph.output.GraphvizOutput.generate"><code class="docutils literal notranslate"><span class="pre">GraphvizOutput.generate()</span></code></a></li>
+<li><a class="reference internal" href="#pycallgraph.output.GraphvizOutput.sanity_check"><code class="docutils literal notranslate"><span class="pre">GraphvizOutput.sanity_check()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pycallgraph.output.GephiOutput"><code class="docutils literal notranslate"><span class="pre">GephiOutput</span></code></a><ul>
+<li><a class="reference internal" href="#pycallgraph.output.GephiOutput.done"><code class="docutils literal notranslate"><span class="pre">GephiOutput.done()</span></code></a></li>
+<li><a class="reference internal" href="#pycallgraph.output.GephiOutput.generate"><code class="docutils literal notranslate"><span class="pre">GephiOutput.generate()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pycallgraph.output.JSONOutput"><code class="docutils literal notranslate"><span class="pre">JSONOutput</span></code></a><ul>
+<li><a class="reference internal" href="#pycallgraph.output.JSONOutput.done"><code class="docutils literal notranslate"><span class="pre">JSONOutput.done()</span></code></a></li>
+<li><a class="reference internal" href="#pycallgraph.output.JSONOutput.generate"><code class="docutils literal notranslate"><span class="pre">JSONOutput.generate()</span></code></a></li>
+<li><a class="reference internal" href="#pycallgraph.output.JSONOutput.schema_version"><code class="docutils literal notranslate"><span class="pre">JSONOutput.schema_version</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pycallgraph.output.PickleOutput"><code class="docutils literal notranslate"><span class="pre">PickleOutput</span></code></a><ul>
+<li><a class="reference internal" href="#pycallgraph.output.PickleOutput.done"><code class="docutils literal notranslate"><span class="pre">PickleOutput.done()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writing-your-own-output">Writing your own output</a></li>
 </ul>
 </li>
 </ul>
@@ -124,7 +278,7 @@ set to True.</p>
   <div>
     <h4>Next topic</h4>
     <p class="topless"><a href="globbing_filter.html"
-                          title="next chapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">globbing_filter.GlobbingFilter</span></code> — Class used for filtering methods</a></p>
+                          title="next chapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">globbing_filter.GlobbingFilter</span></code></a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -154,7 +308,7 @@ set to True.</p>
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="globbing_filter.html" title="globbing_filter.GlobbingFilter — Class used for filtering methods"
+          <a href="globbing_filter.html" title="globbing_filter.GlobbingFilter"
              >next</a> |</li>
         <li class="right" >
           <a href="pycallgraph.html" title="PyCallGraph — Main interface to Python Call Graph"
