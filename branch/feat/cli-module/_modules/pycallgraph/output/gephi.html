@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pycallgraph.output.gephi &#8212; Python Call Graph 2.1.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/classic.css?v=514cf933" />
+    <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
+    
+    <script src="../../../_static/documentation_options.js?v=4f932e3e"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Python Call Graph 2.1.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">pycallgraph.output.gephi</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pycallgraph.output.gephi</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">from</span> <span class="nn">.output</span> <span class="kn">import</span> <span class="n">Output</span>
+
+
+<div class="viewcode-block" id="GephiOutput">
+<a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.GephiOutput">[docs]</a>
+<span class="k">class</span> <span class="nc">GephiOutput</span><span class="p">(</span><span class="n">Output</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fp</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="s1">&#39;pycallgraph.gdf&#39;</span>
+        <span class="n">Output</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">add_arguments</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">subparsers</span><span class="p">,</span> <span class="n">parent_parser</span><span class="p">,</span> <span class="n">usage</span><span class="p">):</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+
+        <span class="n">subparser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+            <span class="s1">&#39;gephi&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Gephi GDF generation&#39;</span><span class="p">,</span>
+            <span class="n">parents</span><span class="o">=</span><span class="p">[</span><span class="n">parent_parser</span><span class="p">],</span> <span class="n">usage</span><span class="o">=</span><span class="n">usage</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">add_output_file</span><span class="p">(</span>
+            <span class="n">subparser</span><span class="p">,</span> <span class="n">defaults</span><span class="p">,</span> <span class="s1">&#39;The generated Gephi GDF file&#39;</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="GephiOutput.generate">
+<a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.GephiOutput.generate">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Returns a string with the contents of a GDF file.&#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generate_nodes</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generate_edges</span><span class="p">(),</span>
+        <span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span></div>
+
+
+    <span class="k">def</span> <span class="nf">generate_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">fields</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+            <span class="s1">&#39;name VARCHAR&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;label VARCHAR&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;group VARCHAR&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;calls INTEGER&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;time DOUBLE&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;memory_in INTEGER&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;memory_out INTEGER&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;color VARCHAR&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;width DOUBLE&#39;</span><span class="p">,</span>
+        <span class="p">])</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;nodedef&gt; </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fields</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
+            <span class="n">fields</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">group</span><span class="p">,</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">calls</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">memory_in</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">memory_out</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_color_func</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="o">.</span><span class="n">rgb_csv</span><span class="p">()),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">node_size</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+            <span class="p">]])</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">node_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">fraction</span> <span class="o">*</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">e</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">generate_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">fields</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+            <span class="s1">&#39;node1 VARCHAR&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;node2 VARCHAR&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;label VARCHAR&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;labelvisible VARCHAR&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;directed BOOLEAN&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;color VARCHAR&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;width DOUBLE&#39;</span><span class="p">,</span>
+        <span class="p">])</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;edgedef&gt; </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fields</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
+            <span class="n">fields</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="n">edge</span><span class="o">.</span><span class="n">src_func</span><span class="p">,</span>
+                <span class="n">edge</span><span class="o">.</span><span class="n">dst_func</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">edge_label</span><span class="p">(</span><span class="n">edge</span><span class="p">),</span>
+                <span class="s1">&#39;true&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;true&#39;</span><span class="p">,</span>
+                <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edge_color_func</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span><span class="o">.</span><span class="n">rgb_csv</span><span class="p">()),</span>
+                <span class="n">edge</span><span class="o">.</span><span class="n">calls</span><span class="o">.</span><span class="n">fraction</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="p">]])</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GephiOutput.done">
+<a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.GephiOutput.done">[docs]</a>
+    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Python Call Graph 2.1.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">pycallgraph.output.gephi</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2007-2024 Gerald Kaszuba, et al..
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>
