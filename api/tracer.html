@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>SyncronousTracer &#8212; Python Call Graph 2.1.6 documentation</title>
+    <title>SyncronousTracer / SynchronousTracer &#8212; Python Call Graph 2.1.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=514cf933" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
@@ -30,7 +30,7 @@
         <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="api.html" >API Classes</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="internal.html" accesskey="U">Internal Classes</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code></a></li> 
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code> / <code class="xref py py-class docutils literal notranslate"><span class="pre">SynchronousTracer</span></code></a></li> 
       </ul>
     </div>  
 
@@ -39,8 +39,8 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="syncronoustracer">
-<h1><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code><a class="headerlink" href="#syncronoustracer" title="Link to this heading">¶</a></h1>
+  <section id="syncronoustracer-synchronoustracer">
+<h1><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code> / <code class="xref py py-class docutils literal notranslate"><span class="pre">SynchronousTracer</span></code><a class="headerlink" href="#syncronoustracer-synchronoustracer" title="Link to this heading">¶</a></h1>
 <p>The synchronous tracer installs <code class="docutils literal notranslate"><span class="pre">sys.settrace</span></code> and processes each event as
 it arrives on the calling thread. It is the default.</p>
 <dl class="py class">
@@ -58,9 +58,13 @@ reason is logged once rather than on every traced event.</p>
 
 </dd></dl>
 
+<p>Both spellings resolve to the same class. The historical names misspell
+“Synchronous” and “Asynchronous”, but they are part of the public API, so the
+correctly spelled names (<code class="xref py py-class docutils literal notranslate"><span class="pre">SynchronousTracer</span></code> and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">AsynchronousTracer</span></code>) are provided as aliases rather than a rename.</p>
 </section>
-<section id="asyncronoustracer">
-<h1><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncronousTracer</span></code><a class="headerlink" href="#asyncronoustracer" title="Link to this heading">¶</a></h1>
+<section id="asyncronoustracer-asynchronoustracer">
+<h1><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncronousTracer</span></code> / <code class="xref py py-class docutils literal notranslate"><span class="pre">AsynchronousTracer</span></code><a class="headerlink" href="#asyncronoustracer-asynchronoustracer" title="Link to this heading">¶</a></h1>
 <p>The asynchronous tracer hands every event to a
 <a class="reference internal" href="#pycallgraph.tracer.TraceProcessor" title="pycallgraph.tracer.TraceProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">TraceProcessor</span></code></a> worker thread over a queue, so the
 traced program is not slowed down by the work of recording. It is enabled with
@@ -155,14 +159,14 @@ from the args and kwargs arguments, respectively.</p>
   <div>
     <h3><a href="../index.html">Table of Contents</a></h3>
     <ul>
-<li><a class="reference internal" href="#"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code></a><ul>
+<li><a class="reference internal" href="#"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code> / <code class="xref py py-class docutils literal notranslate"><span class="pre">SynchronousTracer</span></code></a><ul>
 <li><a class="reference internal" href="#pycallgraph.tracer.SyncronousTracer"><code class="docutils literal notranslate"><span class="pre">SyncronousTracer</span></code></a><ul>
 <li><a class="reference internal" href="#pycallgraph.tracer.SyncronousTracer.memory"><code class="docutils literal notranslate"><span class="pre">SyncronousTracer.memory()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#asyncronoustracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncronousTracer</span></code></a><ul>
+<li><a class="reference internal" href="#asyncronoustracer-asynchronoustracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncronousTracer</span></code> / <code class="xref py py-class docutils literal notranslate"><span class="pre">AsynchronousTracer</span></code></a><ul>
 <li><a class="reference internal" href="#pycallgraph.tracer.AsyncronousTracer"><code class="docutils literal notranslate"><span class="pre">AsyncronousTracer</span></code></a><ul>
 <li><a class="reference internal" href="#pycallgraph.tracer.AsyncronousTracer.shutdown_timeout"><code class="docutils literal notranslate"><span class="pre">AsyncronousTracer.shutdown_timeout</span></code></a></li>
 </ul>
@@ -221,7 +225,7 @@ from the args and kwargs arguments, respectively.</p>
         <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="api.html" >API Classes</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="internal.html" >Internal Classes</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code></a></li> 
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code> / <code class="xref py py-class docutils literal notranslate"><span class="pre">SynchronousTracer</span></code></a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

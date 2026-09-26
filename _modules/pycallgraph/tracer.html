@@ -149,6 +149,14 @@
 
 
 
+<span class="c1"># The historical class names misspell &quot;Synchronous&quot;/&quot;Asynchronous&quot;, but they</span>
+<span class="c1"># are public: they are importable from pycallgraph.tracer, returned by</span>
+<span class="c1"># PyCallGraph.get_tracer_class() and used as headings in the API docs, so</span>
+<span class="c1"># renaming them would break callers. The correctly spelled names are provided</span>
+<span class="c1"># as aliases instead, and both refer to the same class object.</span>
+<span class="n">SynchronousTracer</span> <span class="o">=</span> <span class="n">SyncronousTracer</span>
+
+
 <div class="viewcode-block" id="AsyncronousTracer">
 <a class="viewcode-back" href="../../api/tracer.html#pycallgraph.tracer.AsyncronousTracer">[docs]</a>
 <span class="k">class</span> <span class="nc">AsyncronousTracer</span><span class="p">(</span><span class="n">SyncronousTracer</span><span class="p">):</span>
@@ -176,6 +184,9 @@
                 <span class="s1">&#39;threaded tracing.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shutdown_timeout</span><span class="p">)</span>
             <span class="p">)</span></div>
 
+
+
+<span class="n">AsynchronousTracer</span> <span class="o">=</span> <span class="n">AsyncronousTracer</span>
 
 
 <div class="viewcode-block" id="TraceProcessor">

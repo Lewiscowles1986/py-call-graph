@@ -1,5 +1,5 @@
-:class:`SyncronousTracer`
-=========================
+:class:`SyncronousTracer` / :class:`SynchronousTracer`
+========================================================
 
 The synchronous tracer installs ``sys.settrace`` and processes each event as
 it arrives on the calling thread. It is the default.
@@ -7,8 +7,13 @@ it arrives on the calling thread. It is the default.
 .. autoclass:: pycallgraph.tracer.SyncronousTracer
         :members:
 
-:class:`AsyncronousTracer`
-==========================
+Both spellings resolve to the same class. The historical names misspell
+"Synchronous" and "Asynchronous", but they are part of the public API, so the
+correctly spelled names (:class:`SynchronousTracer` and
+:class:`AsynchronousTracer`) are provided as aliases rather than a rename.
+
+:class:`AsyncronousTracer` / :class:`AsynchronousTracer`
+=========================================================
 
 The asynchronous tracer hands every event to a
 :class:`~pycallgraph.tracer.TraceProcessor` worker thread over a queue, so the
