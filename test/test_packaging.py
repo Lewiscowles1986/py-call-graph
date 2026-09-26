@@ -236,6 +236,11 @@ def test_sdist_contains_the_package(tmp_path):
     End-to-end guard for issue #29: a freshly built sdist must actually
     contain the ``pycallgraph`` package (and its metadata), so that installing
     it can never fall back to the failure the reporter saw.
+
+    The archive filename is *not* asserted: setuptools normalises the project
+    name inconsistently across versions (``python_call_graph`` vs
+    ``python-call-graph``), so it is discovered by suffix instead. A
+    version-dependent name is not what this test is about.
     '''
     import tarfile
 
@@ -249,8 +254,11 @@ def test_sdist_contains_the_package(tmp_path):
     )
     assert result.returncode == 0, result.stdout
 
-    archives = sorted(tmp_path.glob('python_call_graph-*.tar.gz'))
-    assert archives, 'no sdist was produced'
+    archives = sorted(tmp_path.glob('*.tar.gz'))
+    assert archives, (
+        'no sdist was produced; dist-dir contained: %s\n%s'
+        % (sorted(os.listdir(tmp_path)), result.stdout)
+    )
 
     with tarfile.open(archives[-1]) as archive:
         names = archive.getnames()
