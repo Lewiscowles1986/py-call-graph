@@ -62,5 +62,7 @@ def test_yes_stdlib(trace_processor):
 
 def test_module_missing_file(trace_processor):
     sys.settrace(trace_processor.process)
-    import torch  # noqa: F401
-    sys.settrace(None)
+    try:
+        pytest.importorskip('torch')
+    finally:
+        sys.settrace(None)
