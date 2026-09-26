@@ -198,6 +198,12 @@ class TraceProcessor(Thread):
         self.call_stack_memory_in = []
         self.call_stack_memory_out = []
 
+        # Frames that were actually pushed, one per entry of call_stack after
+        # the initial '__main__'. Needed to recognise a generator resumption:
+        # sys.settrace emits a 'call' event every time a generator is resumed,
+        # and the same frame object is reused.
+        self.call_stack_frames = []
+
     def init_libpath(self):
         '''Work out the directories which contain library (non-user) code.
 
@@ -234,7 +240,7 @@ class TraceProcessor(Thread):
 
         # Cache of file name -> bool. is_module_stdlib runs for every 'call'
         # event, and each miss costs syscalls (lstat/readlink in realpath), so
-        # results are memoized exactly as inspect.getmodule is above.
+        # results are memoized by the same idea as _module_for_code above.
         self.is_stdlib_cache = {}
 
     def queue(self, frame, event, arg, memory):
@@ -282,11 +288,39 @@ class TraceProcessor(Thread):
             keep = True
             code = frame.f_code
 
+            is_generator = bool(
+                getattr(code, 'co_flags', 0) & inspect.CO_GENERATOR)
+
+            # Resuming a generator emits another 'call' event for the *same*
+            # frame. That is not a new invocation, so do not push or count it
+            # again -- just re-arm the timer for the next segment.
+            if is_generator and self.call_stack_frames \
+                    and self.call_stack_frames[-1] is frame:
+                if self.call_stack_timer:
+                    self.call_stack_timer[-1] = time.perf_counter()
+                return
+
+            # Align the stack with the real call chain before recording this
+            # frame. A generator that is left suspended, or one that is still
+            # being consumed, can leave frames above the caller; without this
+            # the next edge is attributed to the wrong function.
+            caller_frame = getattr(frame, 'f_back', None)
+            if caller_frame is not None:
+                while self.call_stack_frames and \
+                        self.call_stack_frames[-1] is not caller_frame:
+                    self.call_stack.pop(-1)
+                    self.call_stack_timer.pop(-1)
+                    self.call_stack_frames.pop(-1)
+                    if self.call_stack_memory_in:
+                        self.call_stack_memory_in.pop(-1)
+                    if self.call_stack_memory_out:
+                        self.call_stack_memory_out.pop(-1)
+
             # Stores all the parts of a human readable name of the current call
             full_name_list = []
 
             # Work out the module name
-            module = inspect.getmodule(code)
+            module = _module_for_code(code)
             if module:
                 module_name = module.__name__
                 try:
@@ -347,6 +381,7 @@ class TraceProcessor(Thread):
 
                 self.call_stack.append(full_name)
                 self.call_stack_timer.append(time.perf_counter())
+                self.call_stack_frames.append(frame)
 
                 if memory is not None:
                     self.call_stack_memory_in.append(memory)
@@ -360,6 +395,7 @@ class TraceProcessor(Thread):
                 # was combined with a filter or --max-depth.
                 self.call_stack.append('')
                 self.call_stack_timer.append(None)
+                self.call_stack_frames.append(frame)
 
                 if memory is not None:
                     self.call_stack_memory_in.append(None)
@@ -367,9 +403,25 @@ class TraceProcessor(Thread):
 
         if event == 'return':
 
-            if self.call_stack:
+            # Re-arm rather than pop: a generator resumption will follow with
+            # a 'call' event for this same frame.
+            yielding = False
+            if arg is not None and self.call_stack_frames \
+                    and self.call_stack_frames[-1] is frame:
+                yielding = True
+
+            if not yielding and self.call_stack:
+                if self.call_stack_frames:
+                    self.call_stack_frames.pop(-1)
+
                 full_name = self.call_stack.pop(-1)
 
+                # A frame returns control to its *caller* (frame.f_back), not
+                # necessarily to whatever is on top of the stack: a generator
+                # that is left suspended, or one that is still being consumed,
+                # can strand frames above its caller. Rewinding to f_back keeps
+                # the stack honest and stops the next edge being attributed to
+                # the wrong caller.
                 if self.call_stack_timer:
                     start_time = self.call_stack_timer.pop(-1)
                 else:
@@ -546,27 +598,26 @@ class StatGroup(object):
     pass
 
 
-def simple_memoize(callable_object):
-    '''Simple memoization for functions without keyword arguments.
+#: Cache of code object -> module, used by ``_module_for_code``.
+#:
+#: ``inspect.getmodule`` costs several syscalls and runs on every traced
+#: 'call' event. There is exactly one code object per function, so the mapping
+#: is stable and worth memoizing. This used to be installed by assigning
+#: ``inspect.getmodule = simple_memoize(inspect.getmodule)``, which patched the
+#: standard library process-wide as a side effect of importing pycallgraph.
+#: The cache is kept private to the tracer instead.
+_module_cache = {}
 
-    This is useful for mapping code objects to module in this context.
-    inspect.getmodule() requires a number of system calls, which may slow down
-    the tracing considerably. Caching the mapping from code objects (there is
-    *one* code object for each function, regardless of how many simultaneous
-    activations records there are).
 
-    In this context we can ignore keyword arguments, but a generic memoizer
-    ought to take care of that as well.
+def _module_for_code(code):
+    '''Return the module a code object belongs to, memoized.
+
+    Safe to call repeatedly: the code object -> module mapping does not change
+    for the lifetime of the process.
     '''
-
-    cache = dict()
-
-    def wrapper(*rest):
-        if rest not in cache:
-            cache[rest] = callable_object(*rest)
-        return cache[rest]
-
-    return wrapper
-
-
-inspect.getmodule = simple_memoize(inspect.getmodule)
+    try:
+        return _module_cache[code]
+    except KeyError:
+        module = inspect.getmodule(code)
+        _module_cache[code] = module
+        return module
