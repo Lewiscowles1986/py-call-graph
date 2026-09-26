@@ -1,15 +1,13 @@
 
 
 import inspect
+import os
 import sys
 import sysconfig
 import time
 from collections import defaultdict
+from queue import Queue, Empty
 from threading import Thread
-try:
-    from queue import Queue, Empty
-except ImportError:
-    from queue import Queue, Empty
 
 from .util import Util
 
@@ -103,10 +101,43 @@ class TraceProcessor(Thread):
         self.call_stack_memory_out = []
 
     def init_libpath(self):
-        self.lib_paths = [
-            sysconfig.get_path('purelib').lower(),
-            sysconfig.get_config_var('LIBDEST').lower(),
-        ]
+        '''Work out the directories which contain library (non-user) code.
+
+        ``sysconfig`` reports the *logical* install location, which is often a
+        symlink (Homebrew, asdf and conda all do this). Modules report their
+        *real* path via ``__file__``, so both the logical and the resolved
+        paths are recorded to keep detection working on symlinked installs.
+        '''
+        paths = []
+        for key in ('stdlib', 'platstdlib', 'purelib', 'platlib'):
+            try:
+                path = sysconfig.get_path(key)
+            except KeyError:
+                path = None
+            if path:
+                paths.append(path)
+
+        libdest = sysconfig.get_config_var('LIBDEST')
+        if libdest:
+            paths.append(libdest)
+
+        # Normalise to absolute, resolved (symlink-free) paths. A separator
+        # suffix makes the lookup a proper path-boundary test rather than a
+        # bare string prefix test, so '/usr/lib/python3.13-extra/x.py' is not
+        # mistaken for a module inside '/usr/lib/python3.13'.
+        self.lib_paths = []
+        for path in paths:
+            for candidate in (path, os.path.realpath(path)):
+                candidate = os.path.join(
+                    os.path.abspath(candidate), ''
+                ).lower()
+                if candidate not in self.lib_paths:
+                    self.lib_paths.append(candidate)
+
+        # Cache of file name -> bool. is_module_stdlib runs for every 'call'
+        # event, and each miss costs syscalls (lstat/readlink in realpath), so
+        # results are memoized exactly as inspect.getmodule is above.
+        self.is_stdlib_cache = {}
 
     def queue(self, frame, event, arg, memory):
         data = {
@@ -270,13 +301,30 @@ class TraceProcessor(Thread):
 
     def is_module_stdlib(self, file_name):
         '''
-        Returns True if the file_name is in a known lib directory.
-        Used to check if a function is in the standard library or not.
+        Returns True if ``file_name`` lives under a known library directory.
+
+        "Library" here means the standard library *and* installed packages:
+        ``sysconfig``'s stdlib/platstdlib plus the purelib/platlib
+        (site-packages) directories. That mirrors the ``--stdlib`` option,
+        which controls whether both are included in the trace.
+
+        The check is a path-boundary prefix match on the symlink-resolved,
+        lower-cased path, so it is tolerant of symlinked interpreters
+        (Homebrew, asdf, conda) and of case differences between the recorded
+        paths and a module's ``__file__``.
         '''
-        return any([
-            file_name.lower().startswith(lib_path)
+        try:
+            return self.is_stdlib_cache[file_name]
+        except KeyError:
+            pass
+
+        resolved = os.path.realpath(file_name).lower()
+        result = any([
+            resolved.startswith(lib_path)
             for lib_path in self.lib_paths
         ])
+        self.is_stdlib_cache[file_name] = result
+        return result
 
     def __getstate__(self):
         '''Used for when creating a pickle. Certain instance variables can't
@@ -287,7 +335,8 @@ class TraceProcessor(Thread):
             'outputs',
             'config',
             'updatables',
-            'lib_path',
+            'lib_paths',
+            'is_stdlib_cache',
         ]
         for key in dont_keep:
             del odict[key]
@@ -311,7 +360,7 @@ class TraceProcessor(Thread):
             self.func_memory_in.get(func, 0), self.func_memory_in_max
         )
         stat_group.memory_out = Stat(
-            self.func_memory_in.get(func, 0), self.func_memory_in_max
+            self.func_memory_out.get(func, 0), self.func_memory_out_max
         )
         return stat_group
 
