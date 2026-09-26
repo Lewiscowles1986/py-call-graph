@@ -1,7 +1,4 @@
-try:
-    from . import pickle as pickle
-except ImportError:
-    from . import pickle
+import pickle
 
 from .output import Output
 
