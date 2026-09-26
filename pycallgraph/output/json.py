@@ -79,5 +79,8 @@ class JSONOutput(Output):
         return json.dumps(document, indent=2)
 
     def done(self):
-        with open(self.output_file, 'w') as handle:
+        # Normalise so -o ~/graph.json and -o $HOME/graph.json work like they
+        # do for the other outputs, and be explicit about the encoding.
+        with open(self.normalize_path(self.output_file), 'w',
+                  encoding='utf-8') as handle:
             handle.write(self.generate())

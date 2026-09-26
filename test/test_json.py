@@ -38,6 +38,37 @@ def test_output_file_default():
     assert JSONOutput().output_file.endswith('.json')
 
 
+def test_memory_values_are_exported_when_enabled(json_output):
+    '''
+    With memory tracking on, nodes carry memory_in and memory_out. These are
+    distinct measurements (memory used on entry vs. retained on exit), and the
+    JSON must report the out value in memory_out rather than repeating the in
+    value.
+    '''
+    from pycallgraph.config import Config
+
+    config = Config()
+    config.memory = True
+
+    with PyCallGraph(output=json_output, config=config):
+        one_nop()
+
+    with open(json_output.output_file) as handle:
+        document = json.load(handle)
+
+    by_name = {node['name']: node for node in document['nodes']}
+    node = by_name['calls.one_nop']
+    assert 'memory_in' in node
+    assert 'memory_out' in node
+    # The trace allocates something, so at least one figure is non-zero, and
+    # the two fields describe separate accumulators.
+    processor = json_output.processor
+    expected_in = processor.func_memory_in['calls.one_nop']
+    expected_out = processor.func_memory_out['calls.one_nop']
+    assert node['memory_in'] == expected_in
+    assert node['memory_out'] == expected_out
+
+
 def test_document_is_valid_json(json_output):
     with PyCallGraph(output=json_output):
         one_nop()
@@ -121,8 +152,23 @@ def test_graph_relationship_is_captured(json_output):
 
 
 def test_counts_are_recorded(json_output):
+    '''
+    Call counts must be present and correct, so consumers can weight the
+    graph. Guards against silently emitting zeros.
+    '''
     with PyCallGraph(output=json_output):
         one_nop()
+
+    with open(json_output.output_file) as handle:
+        document = json.load(handle)
+
+    by_name = {node['name']: node for node in document['nodes']}
+    assert by_name['calls.one_nop']['calls'] == 1
+    assert by_name['calls.nop']['calls'] == 1
+
+    edges = {(edge['source'], edge['target']): edge
+             for edge in document['edges']}
+    assert edges[('calls.one_nop', 'calls.nop')]['calls'] == 1
 
 
 def test_document_keys_are_in_documented_order(json_output):
