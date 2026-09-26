@@ -354,7 +354,7 @@ class TraceProcessor(Thread):
             self.func_memory_in.get(func, 0), self.func_memory_in_max
         )
         stat_group.memory_out = Stat(
-            self.func_memory_in.get(func, 0), self.func_memory_in_max
+            self.func_memory_out.get(func, 0), self.func_memory_out_max
         )
         return stat_group
 
