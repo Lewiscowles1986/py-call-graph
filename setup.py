@@ -39,7 +39,6 @@ def read_metadata():
         )
     return namespace
 
-
 metadata = read_metadata()
 
 setup(
@@ -56,6 +55,7 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
     scripts=['scripts/pycallgraph'],
     python_requires='>=3.8',
+    entry_points={'console_scripts': ['pycallgraph = pycallgraph.__main__:main']},
 
     extras_require={
         'ipython': [
