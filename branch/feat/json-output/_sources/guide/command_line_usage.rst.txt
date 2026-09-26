@@ -42,7 +42,9 @@ General Arguments
 
 .. cmdoption:: -s, --stdlib
 
-   When running a trace, also include the Python standard library.
+   When running a trace, also include the Python standard library and
+   installed packages (``site-packages``). By default both are excluded so the
+   graph shows only your own code.
 
 .. cmdoption:: -m, --memory
 
