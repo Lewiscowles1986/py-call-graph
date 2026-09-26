@@ -6,6 +6,7 @@ from .output import Output
 class PickleOutput(Output):
 
     def __init__(self, **kwargs):
+        self.fp = None
         self.output_file = 'pycallgraph.pickle'
         Output.__init__(self, **kwargs)
 

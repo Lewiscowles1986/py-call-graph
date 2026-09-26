@@ -10,6 +10,7 @@ from queue import Queue, Empty
 from threading import Thread
 
 from .util import Util
+from .grouper import Grouper
 
 
 def _empty_int_dict():
@@ -65,7 +66,8 @@ class TraceProcessor(Thread):
 
     # The subset of state that is meaningful once a trace has finished and
     # that can safely be pickled. Runtime-only threading state, the open
-    # outputs and the config are deliberately excluded.
+    # outputs and the config are deliberately excluded. Keep this in sync
+    # with the counters set up in init_trace_data (see test_pickle.py).
     _picklable_state = (
         'call_stack',
         'func_count',
@@ -173,7 +175,10 @@ class TraceProcessor(Thread):
             try:
                 data = self.trace_queue.get(timeout=0.1)
             except Empty:
-                pass
+                # Nothing to process yet. Continuing here is important: if
+                # 'data' from the previous iteration were reused, the same
+                # event would be counted twice.
+                continue
             self.process(**data)
 
     def done(self):
@@ -368,6 +373,9 @@ class TraceProcessor(Thread):
             {src: defaultdict(int, dests)
              for src, dests in self.call_dict.items()},
         )
+        # The grouper is a plain list of patterns, so it survives pickling and
+        # lets a consumer rebuild nodes/edges without the original config.
+        state['trace_grouper'] = self._grouper()
         return state
 
     def groups(self):
@@ -377,10 +385,22 @@ class TraceProcessor(Thread):
         for g in list(grp.items()):
             yield g
 
+    def _grouper(self):
+        '''The grouping function used to build nodes/edges.
+
+        A live processor takes it from the config. An unpickled processor has
+        no config, so the grouper is restored from the pickled state instead
+        (see __getstate__); the default groups everything by top-level module.
+        '''
+        config = getattr(self, 'config', None)
+        if config is not None:
+            return config.trace_grouper
+        return getattr(self, 'trace_grouper', Grouper())
+
     def stat_group_from_func(self, func, calls):
         stat_group = StatGroup()
         stat_group.name = func
-        stat_group.group = self.config.trace_grouper(func)
+        stat_group.group = self._grouper()(func)
         stat_group.calls = Stat(calls, self.func_count_max)
         stat_group.time = Stat(self.func_time.get(func, 0), self.func_time_max)
         stat_group.memory_in = Stat(

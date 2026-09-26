@@ -73,6 +73,63 @@ def test_pickle_output_omits_unpicklable_state(pickle_output):
         assert not hasattr(loaded, attribute)
 
 
+def test_loaded_trace_can_still_render(pickle_output):
+    '''
+    The help text promises a dump for 'generation later', so a loaded trace
+    must still be able to build nodes and edges (this needs the grouper, which
+    lives on the config of a live processor).
+    '''
+    path = _record(pickle_output)
+
+    with open(path, 'rb') as handle:
+        loaded = pickle.load(handle)
+
+    nodes = {node.name: node for node in loaded.nodes()}
+    assert nodes['calls.one_nop'].group == 'calls'
+    assert nodes['calls.one_nop'].calls.value == 1
+    edges = {(edge.src_func, edge.dst_func) for edge in loaded.edges()}
+    assert ('calls.one_nop', 'calls.nop') in edges
+
+
+def test_pickled_state_covers_the_trace_data():
+    '''
+    __getstate__ uses an allowlist, so a counter added to init_trace_data is
+    silently dropped from dumps unless the allowlist is updated. Guard that.
+    '''
+    from pycallgraph.config import Config
+
+    processor = TraceProcessor([], Config())
+    expected = set(processor._picklable_state) | {'call_dict', 'trace_grouper'}
+    assert set(processor.__getstate__()) == expected
+
+
+def test_threaded_trace_does_not_count_calls_twice(temp):
+    '''
+    The threaded tracer hands events to a worker thread. If the worker reuses
+    a previously dequeued event when the queue is briefly empty, calls are
+    counted more than once.
+    '''
+    from pycallgraph.config import Config
+    from pycallgraph.tracer import AsyncronousTracer
+
+    output = PickleOutput()
+    output.output_file = temp
+    config = Config()
+    config.threaded = True
+
+    tracer = AsyncronousTracer([output], config=config)
+    assert tracer.processor.func_count['calls.nop'] == 0
+
+    with PyCallGraph(output=output, config=config):
+        one_nop()
+
+    with open(temp, 'rb') as handle:
+        loaded = pickle.load(handle)
+
+    assert loaded.func_count['calls.one_nop'] == 1
+    assert loaded.func_count['calls.nop'] == 1
+
+
 def test_pickle_output_is_selectable_from_the_command_line(temp):
     '''
     The output class existed but was never registered, so the documented

@@ -41,4 +41,23 @@ The document is versioned and contains ``nodes`` and ``edges``:
 Edge endpoints are named ``source``/``target`` (Gephi's GDF output calls
 the same fields ``node1``/``node2``).
 
+Pickle
+======
+
+This output persists the completed trace so it can be loaded and rendered later without re-running the program:
+
+.. code-block:: bash
+
+    pycallgraph pickle --output-file callgraph.pickle -- my_script.py
+
+.. code-block:: python
+
+    import pickle
+    with open('callgraph.pickle', 'rb') as handle:
+        trace = pickle.load(handle)
+    for node in trace.nodes():
+        print(node.name, node.calls.value)
+
+Only the collected trace data is persisted; the configuration and outputs are not, so a loaded trace groups functions by top-level module by default.
+
 .. todo:: Expand this section with screenshots and examples.
