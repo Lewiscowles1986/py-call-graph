@@ -74,9 +74,10 @@ class JSONOutput(Output):
             'nodes': self.generate_nodes(),
             'edges': self.generate_edges(),
         }
-        return json.dumps(document, indent=2, sort_keys=True)
+        # Insertion order is preserved so the file reads version, nodes, edges
+        # as documented; sort_keys would put edges first.
+        return json.dumps(document, indent=2)
 
     def done(self):
         with open(self.output_file, 'w') as handle:
             handle.write(self.generate())
-        self.fp = None

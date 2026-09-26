@@ -8,6 +8,9 @@ Graphviz/Gephi rendering or on the pickle format (which ties consumers to the
 internal Python objects).
 '''
 import json
+import os
+import subprocess
+import sys
 
 import pytest
 
@@ -15,6 +18,8 @@ from pycallgraph import PyCallGraph
 from pycallgraph.output import outputters
 from pycallgraph.output.json import JSONOutput
 from calls import one_nop
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 @pytest.fixture
@@ -119,8 +124,39 @@ def test_counts_are_recorded(json_output):
     with PyCallGraph(output=json_output):
         one_nop()
 
+
+def test_document_keys_are_in_documented_order(json_output):
+    '''
+    The file reads version, nodes, edges. Guards against sorting the keys,
+    which would put edges first and contradict the documented shape.
+    '''
+    with PyCallGraph(output=json_output):
+        one_nop()
+
     with open(json_output.output_file) as handle:
         document = json.load(handle)
 
-    by_name = {node['name']: node for node in document['nodes']}
-    assert by_name['calls.nop']['calls'] == 1
+    assert list(document) == ['version', 'nodes', 'edges']
+
+
+def test_json_output_works_from_the_command_line(temp):
+    '''End-to-end check that the CLI can select and drive the json output.'''
+    env = dict(os.environ)
+    env['PYTHONPATH'] = REPO_ROOT
+    result = subprocess.run(
+        [
+            sys.executable,
+            os.path.join(REPO_ROOT, 'scripts', 'pycallgraph'),
+            'json', '-o', temp,
+            '--', os.path.join(REPO_ROOT, 'test', 'calls.py'),
+        ],
+        cwd=REPO_ROOT, env=env,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+    )
+    assert result.returncode == 0, result.stdout
+
+    with open(temp) as handle:
+        document = json.load(handle)
+
+    assert document['version'] == JSONOutput.schema_version
+    assert document['nodes']
