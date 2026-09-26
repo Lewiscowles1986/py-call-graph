@@ -1,6 +1,7 @@
 
 
 import inspect
+import os
 import sys
 import sysconfig
 import time
@@ -103,10 +104,32 @@ class TraceProcessor(Thread):
         self.call_stack_memory_out = []
 
     def init_libpath(self):
-        self.lib_paths = [
-            sysconfig.get_path('purelib').lower(),
-            sysconfig.get_config_var('LIBDEST').lower(),
-        ]
+        '''Work out the directories which contain library (non-user) code.
+
+        ``sysconfig`` reports the *logical* install location, which is often a
+        symlink (Homebrew, asdf and conda all do this). Modules report their
+        *real* path via ``__file__``, so both the logical and the resolved
+        paths are recorded to keep detection working on symlinked installs.
+        '''
+        paths = set()
+        for key in ('stdlib', 'platstdlib', 'purelib', 'platlib'):
+            try:
+                path = sysconfig.get_path(key)
+            except KeyError:
+                path = None
+            if path:
+                paths.add(path)
+
+        libdest = sysconfig.get_config_var('LIBDEST')
+        if libdest:
+            paths.add(libdest)
+
+        self.lib_paths = []
+        for path in paths:
+            for candidate in (path, os.path.realpath(path)):
+                lowered = candidate.lower()
+                if lowered not in self.lib_paths:
+                    self.lib_paths.append(lowered)
 
     def queue(self, frame, event, arg, memory):
         data = {
@@ -273,8 +296,9 @@ class TraceProcessor(Thread):
         Returns True if the file_name is in a known lib directory.
         Used to check if a function is in the standard library or not.
         '''
+        file_name = os.path.realpath(file_name).lower()
         return any([
-            file_name.lower().startswith(lib_path)
+            file_name.startswith(lib_path)
             for lib_path in self.lib_paths
         ])
 
@@ -287,7 +311,7 @@ class TraceProcessor(Thread):
             'outputs',
             'config',
             'updatables',
-            'lib_path',
+            'lib_paths',
         ]
         for key in dont_keep:
             del odict[key]
