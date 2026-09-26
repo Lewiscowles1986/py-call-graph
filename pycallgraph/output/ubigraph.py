@@ -1,8 +1,4 @@
-try:
-    from xmlrpc.client import Server
-except ImportError:
-    from xmlrpc.client import Server
-
+from xmlrpc.client import Server
 
 # from ..exceptions import PyCallGraphException
 from .output import Output

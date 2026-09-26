@@ -1,4 +1,3 @@
-import re
 import os
 from shutil import which
 from typing import Optional
@@ -100,12 +99,12 @@ class Output(object):
         )
 
     def normalize_path(self, path):
-        regex_user_expand = re.compile(r'\A~')
-        if regex_user_expand.match(path):
-            path = os.path.expanduser(path)
-        else:
-            path = os.path.expandvars(path)  # expand, just in case
-        return path
+        '''Expand both ``~`` and environment variables in ``path``.
+
+        A path may legitimately use both forms (``~/graphs/$RUN.json``), so
+        each expansion is applied in turn rather than choosing between them.
+        '''
+        return os.path.expandvars(os.path.expanduser(path))
 
     def prepare_output_file(self):
         if self.fp is None:

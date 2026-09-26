@@ -5,12 +5,19 @@ import os
 import sys
 import sysconfig
 import time
+import warnings
 from collections import defaultdict
 from queue import Queue, Empty
 from threading import Thread
 
 from .util import Util
 from .grouper import Grouper
+from .exceptions import PyCallGraphException
+
+
+#: Sentinel placed on the trace queue to tell the processor thread that
+#: everything queued before it has been processed and it should exit.
+_SHUTDOWN = object()
 
 
 def _empty_int_dict():
@@ -54,15 +61,41 @@ class SyncronousTracer(object):
     def __init__(self, outputs, config):
         self.processor = TraceProcessor(outputs, config)
         self.config = config
+        # Set once this tracer has reported that the memory backend cannot
+        # measure, so the warning is not repeated for every traced event.
+        self._memory_backend_warned = False
 
     def tracer(self, frame, event, arg):
         self.processor.process(frame, event, arg, self.memory())
         return self.tracer
 
     def memory(self):
-        if self.config.memory:
-            from .memory_profiler import memory_usage
-            return int(memory_usage(-1, 0)[0] * 1000000)
+        '''Return the current memory usage in bytes, or None if disabled.
+
+        A negative reading from ``memory_usage`` means "could not measure"
+        (for example ``ps v`` on macOS has no RSS column). That is reported as
+        ``None`` so it is not published as a real, negative figure, and the
+        reason is logged once rather than on every traced event.
+        '''
+        if not self.config.memory:
+            return None
+
+        from .memory_profiler import memory_usage
+
+        sample = memory_usage(-1, 0)[0]
+        if sample < 0:
+            if not self._memory_backend_warned:
+                self._memory_backend_warned = True
+                warnings.warn(
+                    'Memory usage could not be measured on this platform: the '
+                    'memory backend returned -1, which usually means the '
+                    'psutil module is missing and no usable ps backend is '
+                    'available. Memory statistics will be omitted. Installing '
+                    'psutil may help.'
+                )
+            return None
+
+        return int(sample * 1000000)
 
     def start(self):
         sys.settrace(self.tracer)
@@ -76,6 +109,10 @@ class SyncronousTracer(object):
 
 class AsyncronousTracer(SyncronousTracer):
 
+    #: How long to wait for the trace processor to drain and exit. A stuck
+    #: processor used to block the traced program forever with no diagnostics.
+    shutdown_timeout = 10.0
+
     def start(self):
         self.processor.start()
         SyncronousTracer.start(self)
@@ -86,7 +123,14 @@ class AsyncronousTracer(SyncronousTracer):
 
     def done(self):
         self.processor.done()
-        self.processor.join()
+        self.processor.join(self.shutdown_timeout)
+
+        if self.processor.is_alive():
+            raise PyCallGraphException(
+                'The threaded trace processor did not finish within '
+                '{0} seconds. The trace is incomplete; try running without '
+                'threaded tracing.'.format(self.shutdown_timeout)
+            )
 
 
 class TraceProcessor(Thread):
@@ -112,7 +156,10 @@ class TraceProcessor(Thread):
     )
 
     def __init__(self, outputs, config):
-        Thread.__init__(self)
+        # Daemon so a trace that is never cleanly finished cannot keep the
+        # interpreter alive at exit. A normal run still joins the processor in
+        # AsyncronousTracer.done() before outputs are generated.
+        Thread.__init__(self, daemon=True)
         self.trace_queue = Queue()
         self.keep_going = True
         self.outputs = outputs
@@ -123,8 +170,6 @@ class TraceProcessor(Thread):
         self.init_libpath()
 
     def init_trace_data(self):
-        self.previous_event_return = False
-
         # A mapping of which function called which other function
         self.call_dict = defaultdict(lambda: defaultdict(int))
 
@@ -202,45 +247,36 @@ class TraceProcessor(Thread):
         self.trace_queue.put(data)
 
     def run(self):
-        while self.keep_going:
+        while True:
             try:
                 data = self.trace_queue.get(timeout=0.1)
             except Empty:
-                # Nothing to process yet. Continuing here is important: if
-                # 'data' from the previous iteration were reused, the same
-                # event would be counted twice.
+                # Nothing to process yet. If shutdown has been requested and
+                # the queue is genuinely empty, the backlog is drained.
+                if not self.keep_going:
+                    break
                 continue
+
+            if data is _SHUTDOWN:
+                # Sentinel: everything queued before this has been processed.
+                break
+
             self.process(**data)
 
     def done(self):
-        while not self.trace_queue.empty():
-            time.sleep(0.1)
+        '''Ask the processor to finish and exit.
+
+        Everything already queued is still processed, then the worker exits
+        on the sentinel. This replaces a busy-wait on ``queue.empty()`` that
+        spun forever if the worker had already stopped.
+        '''
         self.keep_going = False
+        self.trace_queue.put(_SHUTDOWN)
 
     def process(self, frame, event, arg, memory=None):
         '''This function processes a trace result. Keeps track of
         relationships between calls.
         '''
-
-        if memory is not None and self.previous_event_return:
-            # Deal with memory when function has finished so local variables
-            # can be cleaned up
-            self.previous_event_return = False
-
-            if self.call_stack_memory_out:
-                full_name, m = self.call_stack_memory_out.pop(-1)
-            else:
-                full_name, m = (None, None)
-
-            # NOTE: Call stack is no longer the call stack that may be
-            # expected. Potentially need to store a copy of it.
-            if full_name and m:
-                call_memory = memory - m
-
-                self.func_memory_out[full_name] += call_memory
-                self.func_memory_out_max = max(
-                    self.func_memory_out_max, self.func_memory_out[full_name]
-                )
 
         if event == 'call':
             keep = True
@@ -310,19 +346,26 @@ class TraceProcessor(Thread):
                 )
 
                 self.call_stack.append(full_name)
-                self.call_stack_timer.append(time.time())
+                self.call_stack_timer.append(time.perf_counter())
 
                 if memory is not None:
                     self.call_stack_memory_in.append(memory)
                     self.call_stack_memory_out.append([full_name, memory])
 
             else:
+                # Keep all four stacks in step so a return can pop them
+                # positionally. Filtered frames push sentinels onto every
+                # stack; previously the memory stacks were skipped, which
+                # attributed memory to the wrong function whenever --memory
+                # was combined with a filter or --max-depth.
                 self.call_stack.append('')
                 self.call_stack_timer.append(None)
 
-        if event == 'return':
+                if memory is not None:
+                    self.call_stack_memory_in.append(None)
+                    self.call_stack_memory_out.append(None)
 
-            self.previous_event_return = True
+        if event == 'return':
 
             if self.call_stack:
                 full_name = self.call_stack.pop(-1)
@@ -333,7 +376,7 @@ class TraceProcessor(Thread):
                     start_time = None
 
                 if start_time:
-                    call_time = time.time() - start_time
+                    call_time = time.perf_counter() - start_time
 
                     self.func_time[full_name] += call_time
                     self.func_time_max = max(
@@ -341,12 +384,15 @@ class TraceProcessor(Thread):
                     )
 
                 if memory is not None:
+                    # Pop unconditionally so the stacks cannot drift. An entry
+                    # is None for a filtered frame; a measured value of 0 is a
+                    # real reading and must not be treated as "no data".
                     if self.call_stack_memory_in:
                         start_mem = self.call_stack_memory_in.pop(-1)
                     else:
                         start_mem = None
 
-                    if start_mem:
+                    if start_mem is not None:
                         call_memory = memory - start_mem
                         self.func_memory_in[full_name] += call_memory
 
@@ -354,6 +400,24 @@ class TraceProcessor(Thread):
                             self.func_memory_in_max,
                             self.func_memory_in[full_name],
                         )
+
+                    if self.call_stack_memory_out:
+                        entry = self.call_stack_memory_out.pop(-1)
+                    else:
+                        entry = None
+
+                    # Compute memory-out here, at return time, rather than
+                    # relying on a global flag tied to the previous event,
+                    # which desynchronised the stack when a reading was 0.
+                    if entry is not None:
+                        out_name, out_mem = entry
+                        if out_mem is not None:
+                            out_memory = memory - out_mem
+                            self.func_memory_out[out_name] += out_memory
+                            self.func_memory_out_max = max(
+                                self.func_memory_out_max,
+                                self.func_memory_out[out_name],
+                            )
 
     def is_module_stdlib(self, file_name):
         '''

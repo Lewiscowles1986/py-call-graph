@@ -35,8 +35,6 @@ class Config(object):
         # Grouping
         self.trace_grouper = Grouper()
 
-        self.did_init = True
-
         # Update the defaults with anything from kwargs
         [setattr(self, k, v) for k, v in list(kwargs.items())]
 
@@ -73,15 +71,19 @@ class Config(object):
         sys.argv = [self.command] + self.command_args
 
     def convert_filter_args(self):
-        if not self.include:
-            self.include = ['*']
+        include = list(self.include) if self.include else ['*']
 
-        if not self.include_pycallgraph:
-            self.exclude.append('pycallgraph.*')
+        # Copy: never mutate the caller's list, and never accumulate on
+        # repeated calls.
+        exclude = list(self.exclude) if self.exclude else []
+        if not self.include_pycallgraph and 'pycallgraph.*' not in exclude:
+            exclude.append('pycallgraph.*')
 
+        self.include = include
+        self.exclude = exclude
         self.trace_filter = GlobbingFilter(
-            include=self.include,
-            exclude=self.exclude,
+            include=include,
+            exclude=exclude,
         )
 
     def create_parser(self):
