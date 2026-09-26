@@ -25,6 +25,10 @@ class PyCallGraph(object):
 
         self.config = config or Config()
 
+        # True between __enter__ and its matching __exit__, so a context that
+        # is exited more than once does not render the outputs again.
+        self._in_context = False
+
         configured_ouput = self.config.get_output()
         if configured_ouput:
             self.output.append(configured_ouput)
@@ -32,10 +36,24 @@ class PyCallGraph(object):
         self.reset()
 
     def __enter__(self):
+        '''Start tracing and return this instance.
+
+        Returning self allows ``with PyCallGraph(...) as graph:``; it used to
+        return None, so ``graph`` was silently bound to None.
+        '''
         self.start()
+        self._in_context = True
+        return self
 
     def __exit__(self, type, value, traceback):
-        self.done()
+        '''Finish the trace and generate the outputs.
+
+        Idempotent, and returns a falsy value so an exception raised in the
+        body still propagates.
+        '''
+        if self._in_context:
+            self._in_context = False
+            self.done()
 
     def get_tracer_class(self):
         if self.config.threaded:
