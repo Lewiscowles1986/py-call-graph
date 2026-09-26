@@ -304,8 +304,17 @@ class TraceProcessor(Thread):
 
     def is_module_stdlib(self, file_name):
         '''
-        Returns True if the file_name is in a known lib directory.
-        Used to check if a function is in the standard library or not.
+        Returns True if ``file_name`` lives under a known library directory.
+
+        "Library" here means the standard library *and* installed packages:
+        ``sysconfig``'s stdlib/platstdlib plus the purelib/platlib
+        (site-packages) directories. That mirrors the ``--stdlib`` option,
+        which controls whether both are included in the trace.
+
+        The check is a path-boundary prefix match on the symlink-resolved,
+        lower-cased path, so it is tolerant of symlinked interpreters
+        (Homebrew, asdf, conda) and of case differences between the recorded
+        paths and a module's ``__file__``.
         '''
         try:
             return self.is_stdlib_cache[file_name]

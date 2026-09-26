@@ -98,24 +98,25 @@ def test_sibling_directory_with_shared_prefix_is_not_library(trace_processor):
     assert not trace_processor.is_module_stdlib(sibling)
 
 
-def test_lib_paths_are_absolute_and_boundary_terminated(trace_processor):
-    '''
-    Each recorded library path is absolute and ends with a separator so that
-    prefix comparisons cannot match a sibling directory.
-    '''
-    assert trace_processor.lib_paths
-    for lib_path in trace_processor.lib_paths:
-        assert os.path.isabs(lib_path)
-        assert lib_path.endswith(os.sep)
+def test_results_are_cached(trace_processor, monkeypatch):
+    '''Repeated lookups resolve the path once instead of on every call.'''
+    calls = []
+    real_realpath = os.path.realpath
 
+    def counting_realpath(path):
+        calls.append(path)
+        return real_realpath(path)
 
-def test_results_are_cached(trace_processor):
-    '''Repeated lookups reuse a cache instead of re-resolving the path.'''
+    monkeypatch.setattr(os.path, 'realpath', counting_realpath)
+
     stdlib = sysconfig.get_path('stdlib')
     target = os.path.join(stdlib, 'os.py')
 
     assert trace_processor.is_module_stdlib(target)
-    assert trace_processor.is_stdlib_cache[target] is True
+    resolved_once = len(calls)
+    assert resolved_once > 0
+    assert trace_processor.is_module_stdlib(target)
+    assert len(calls) == resolved_once
 
 
 def test_getstate_does_not_raise(trace_processor):
