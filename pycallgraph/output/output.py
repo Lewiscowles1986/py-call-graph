@@ -19,15 +19,21 @@ class Output(object):
         [setattr(self, k, v) for k, v in list(kwargs.items())]
 
     def set_config(self, config):
+        '''Move the output options from a Config onto this output.
+
+        Only attributes the output already declares (typically its
+        constructor defaults, set from the command line as output options) are
+        copied. This used to copy *every* attribute of the config unless the
+        output had a callable of the same name, which put the argparse parser,
+        the selected output-type name and unrelated config state onto the
+        output.
         '''
-        This is a quick hack to move the config variables set in Config into
-        the output module config variables.
-        '''
-        for k, v in list(config.__dict__.items()):
-            if hasattr(self, k) and \
-                    callable(getattr(self, k)):
+        for key, value in list(vars(config).items()):
+            if key not in vars(self):
                 continue
-            setattr(self, k, v)
+            if callable(getattr(self, key, None)):
+                continue
+            setattr(self, key, value)
 
     def node_color(self, node):
         value = float(node.time.fraction * 2 + node.calls.fraction) / 3
