@@ -59,14 +59,14 @@ Please give more ideas for problems or further use-cases for this repo. I am rea
 <section id="project-status">
 <h3>Project Status<a class="headerlink" href="#project-status" title="Link to this heading">¶</a></h3>
 <p>The latest version is <strong>2.1.6</strong> which was released on 2025-06-06.
-The latest version has been tested running on Python versions 3.8 - 3.13</p>
+The latest version has been tested running on Python versions 3.8 - 3.14</p>
 <p>The <a class="reference external" href="https://github.com/lewiscowles1986/py-call-graph/#python-call-graph">project lives on GitHub</a>, where you can <a class="reference external" href="https://github.com/lewiscowles1986/py-call-graph/issues">report issues</a>, contribute to the project by <a class="reference external" href="https://help.github.com/articles/fork-a-repo">forking the project</a> then creating a <a class="reference external" href="https://help.github.com/articles/using-pull-requests">pull request</a>, or just <a class="reference external" href="https://github.com/lewiscowles1986/py-call-graph/">browse the source code</a>.</p>
 <p>The documentation needs some work stiil. Feel free to contribute :smile:</p>
 </section>
 <section id="features">
 <h3>Features<a class="headerlink" href="#features" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p>Support for Python 3.8 - 3.13.</p></li>
+<li><p>Support for Python 3.8 - 3.14.</p></li>
 <li><p>Static visualizations of the call graph using various tools such as Graphviz and Gephi.</p></li>
 <li><p>Execute pycallgraph from the command line or import it in your code.</p></li>
 <li><p>Customisable colors. You can programatically set the colors based on number of calls, time taken, memory usage, etc.</p></li>
@@ -103,6 +103,38 @@ The latest version has been tested running on Python versions 3.8 - 3.13</p>
 <section id="documentation">
 <h3>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">¶</a></h3>
 <p>Feel free to browse the <a class="reference external" href="https://lewiscowles1986.github.io/py-call-graph/">documentation of pycallgraph</a> for the <a class="reference external" href="https://lewiscowles1986.github.io/py-call-graph/guide/index.html">usage guide</a> and <a class="reference external" href="https://lewiscowles1986.github.io/py-call-graph/api/api.html">API reference</a>.</p>
+</section>
+<section id="contributing-and-maintenance">
+<h3>Contributing and maintenance<a class="headerlink" href="#contributing-and-maintenance" title="Link to this heading">¶</a></h3>
+<p>Everything a maintainer needs is in one place so the workflow does not depend
+on tribal knowledge:</p>
+<ul>
+<li><p><strong>Run the tests</strong> (Python 3.8 - 3.14):</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements/development.txt
+<span class="nv">PYTHONPATH</span><span class="o">=</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="w"> </span>pytest<span class="w"> </span>--ignore<span class="o">=</span>pycallgraph/memory_profiler.py<span class="w"> </span><span class="nb">test</span><span class="w"> </span>pycallgraph<span class="w"> </span>examples
+</pre></div>
+</div>
+<p>The Graphviz tests need the <code class="docutils literal notranslate"><span class="pre">dot</span></code> binary (<code class="docutils literal notranslate"><span class="pre">apt</span> <span class="pre">install</span> <span class="pre">graphviz</span></code> /
+<code class="docutils literal notranslate"><span class="pre">brew</span> <span class="pre">install</span> <span class="pre">graphviz</span></code>). <code class="docutils literal notranslate"><span class="pre">test/test_packaging.py</span></code> builds a real sdist.</p>
+</li>
+<li><p><strong>Lint</strong>, matching CI:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>flake8<span class="w"> </span>--exclude<span class="o">=</span>__init__.py,memory_profiler.py<span class="w"> </span>pycallgraph
+flake8<span class="w"> </span>--ignore<span class="o">=</span>F403<span class="w"> </span><span class="nb">test</span>
+flake8<span class="w"> </span>examples
+</pre></div>
+</div>
+</li>
+<li><p><strong>Build and release</strong>: <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">sdist</span></code> produces the distribution;
+publishing happens automatically from a published GitHub release
+(<code class="docutils literal notranslate"><span class="pre">.github/workflows/release.yml</span></code>). The version lives only in
+<code class="docutils literal notranslate"><span class="pre">pycallgraph/metadata.py</span></code>.</p></li>
+<li><p><strong>Add an output format</strong> by subclassing <code class="docutils literal notranslate"><span class="pre">pycallgraph.output.Output</span></code>,
+implementing <code class="docutils literal notranslate"><span class="pre">done()</span></code> (and optionally <code class="docutils literal notranslate"><span class="pre">generate()</span></code>), then registering it in
+the <code class="docutils literal notranslate"><span class="pre">outputters</span></code> map in <code class="docutils literal notranslate"><span class="pre">pycallgraph/output/__init__.py</span></code>. The JSON output is a
+small, self-contained example.</p></li>
+<li><p><strong>Document new behaviour</strong> in <code class="docutils literal notranslate"><span class="pre">docs/</span></code>; the man page is generated from
+<code class="docutils literal notranslate"><span class="pre">docs/guide/command_line_usage.rst</span></code>.</p></li>
+</ul>
 </section>
 </section>
 <div class="toctree-wrapper compound">
@@ -195,6 +227,7 @@ The latest version has been tested running on Python versions 3.8 - 3.13</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#documentation">Documentation</a></li>
+<li><a class="reference internal" href="#contributing-and-maintenance">Contributing and maintenance</a></li>
 </ul>
 </li>
 </ul>
