@@ -55,6 +55,11 @@ setup(
     url=metadata['__url__'],
     packages=find_packages(exclude=['test', 'test.*']),
     scripts=['scripts/pycallgraph'],
+    entry_points={
+        'console_scripts': [
+            'pycallgraph = pycallgraph.cli:run',
+        ],
+    },
     python_requires='>=3.8',
 
     extras_require={
