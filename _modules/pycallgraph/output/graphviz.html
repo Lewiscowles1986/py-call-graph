@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pycallgraph.output.graphviz &#8212; Python Call Graph 2.1.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/classic.css?v=514cf933" />
+    <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
+    
+    <script src="../../../_static/documentation_options.js?v=4f932e3e"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Python Call Graph 2.1.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">pycallgraph.output.graphviz</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pycallgraph.output.graphviz</h1><div class="highlight"><pre>
+<span></span>
+
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">textwrap</span>
+<span class="kn">import</span> <span class="nn">subprocess</span> <span class="k">as</span> <span class="nn">sub</span>
+
+<span class="kn">from</span> <span class="nn">..metadata</span> <span class="kn">import</span> <span class="n">__version__</span>
+<span class="kn">from</span> <span class="nn">..exceptions</span> <span class="kn">import</span> <span class="n">PyCallGraphException</span>
+<span class="kn">from</span> <span class="nn">..color</span> <span class="kn">import</span> <span class="n">Color</span>
+<span class="kn">from</span> <span class="nn">.output</span> <span class="kn">import</span> <span class="n">Output</span>
+
+
+<div class="viewcode-block" id="GraphvizOutput">
+<a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.GraphvizOutput">[docs]</a>
+<span class="k">class</span> <span class="nc">GraphvizOutput</span><span class="p">(</span><span class="n">Output</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tool</span> <span class="o">=</span> <span class="s1">&#39;dot&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tool_package</span> <span class="o">=</span> <span class="s1">&#39;graphviz&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="s1">&#39;pycallgraph.png&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_type</span> <span class="o">=</span> <span class="s1">&#39;png&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">font_name</span> <span class="o">=</span> <span class="s1">&#39;Verdana&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">font_size</span> <span class="o">=</span> <span class="mi">7</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_font_size</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_border_color</span> <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">)</span>
+
+        <span class="n">Output</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_graph_attributes</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">add_arguments</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">subparsers</span><span class="p">,</span> <span class="n">parent_parser</span><span class="p">,</span> <span class="n">usage</span><span class="p">):</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+
+        <span class="n">subparser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+            <span class="s1">&#39;graphviz&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Graphviz generation&#39;</span><span class="p">,</span>
+            <span class="n">parents</span><span class="o">=</span><span class="p">[</span><span class="n">parent_parser</span><span class="p">],</span> <span class="n">usage</span><span class="o">=</span><span class="n">usage</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">subparser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;-l&#39;</span><span class="p">,</span> <span class="s1">&#39;--tool&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;tool&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">defaults</span><span class="o">.</span><span class="n">tool</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;The tool from Graphviz to use, e.g. dot, neato, etc.&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">add_output_file</span><span class="p">(</span>
+            <span class="n">subparser</span><span class="p">,</span> <span class="n">defaults</span><span class="p">,</span> <span class="s1">&#39;The generated Graphviz file&#39;</span>
+        <span class="p">)</span>
+
+        <span class="n">subparser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="s1">&#39;--output-format&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">defaults</span><span class="o">.</span><span class="n">output_type</span><span class="p">,</span>
+            <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;output_type&#39;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Image format to produce, e.g. png, ps, dot, etc. &#39;</span>
+            <span class="s1">&#39;See http://www.graphviz.org/doc/info/output.html for more.&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">subparser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--font-name&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">defaults</span><span class="o">.</span><span class="n">font_name</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Name of the font to be used&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">subparser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--font-size&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">defaults</span><span class="o">.</span><span class="n">font_size</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Size of the font to be used&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="GraphvizOutput.sanity_check">
+<a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.GraphvizOutput.sanity_check">[docs]</a>
+    <span class="k">def</span> <span class="nf">sanity_check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_binary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tool</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tool_package</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">prepare_graph_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">generated_message</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">n&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+            <span class="sa">r</span><span class="s1">&#39;Generated by Python Call Graph v</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">__version__</span><span class="p">,</span>
+            <span class="sa">r</span><span class="s1">&#39;http://pycallgraph.readthedocs.io&#39;</span><span class="p">,</span>
+        <span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph_attributes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;graph&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;overlap&#39;</span><span class="p">:</span> <span class="s1">&#39;scalexy&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;fontname&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">font_name</span><span class="p">,</span>
+                <span class="s1">&#39;fontsize&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">font_size</span><span class="p">,</span>
+                <span class="s1">&#39;fontcolor&#39;</span><span class="p">:</span> <span class="n">Color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">rgba_web</span><span class="p">(),</span>
+                <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">generated_message</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s1">&#39;node&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;fontname&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">font_name</span><span class="p">,</span>
+                <span class="s1">&#39;fontsize&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">font_size</span><span class="p">,</span>
+                <span class="s1">&#39;fontcolor&#39;</span><span class="p">:</span> <span class="n">Color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">rgba_web</span><span class="p">(),</span>
+                <span class="s1">&#39;style&#39;</span><span class="p">:</span> <span class="s1">&#39;filled&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;shape&#39;</span><span class="p">:</span> <span class="s1">&#39;rect&#39;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s1">&#39;edge&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;fontname&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">font_name</span><span class="p">,</span>
+                <span class="s1">&#39;fontsize&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">font_size</span><span class="p">,</span>
+                <span class="s1">&#39;fontcolor&#39;</span><span class="p">:</span> <span class="n">Color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">rgba_web</span><span class="p">(),</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="GraphvizOutput.done">
+<a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.GraphvizOutput.done">[docs]</a>
+    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+
+        <span class="n">fd</span><span class="p">,</span> <span class="n">temp_name</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">os</span><span class="o">.</span><span class="n">fdopen</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+
+        <span class="c1"># Pass an argv sequence rather than a shell command string: with</span>
+        <span class="c1"># shell=True a path or option containing shell metacharacters would be</span>
+        <span class="c1"># reinterpreted by the shell.</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tool</span><span class="p">,</span>
+            <span class="s1">&#39;-T</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_type</span><span class="p">),</span>
+            <span class="s1">&#39;-o</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_file</span><span class="p">),</span>
+            <span class="n">temp_name</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">(</span><span class="s1">&#39;Executing: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command</span><span class="p">)))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">proc</span> <span class="o">=</span> <span class="n">sub</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+                <span class="n">command</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">sub</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">sub</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">:</span>
+                <span class="c1"># Surface what dot actually said, or the failure is opaque.</span>
+                <span class="n">detail</span> <span class="o">=</span> <span class="p">(</span><span class="n">stderr</span> <span class="ow">or</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
+                    <span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;replace&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s1">&#39;The command &quot;</span><span class="si">{0}</span><span class="s1">&quot; failed with exit code </span><span class="si">{1}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command</span><span class="p">),</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">detail</span><span class="p">:</span>
+                    <span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39; Output: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">PyCallGraphException</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">temp_name</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">(</span><span class="s1">&#39;Generated </span><span class="si">{0}</span><span class="s1"> with </span><span class="si">{1}</span><span class="s1"> nodes.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_file</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">func_count</span><span class="p">),</span>
+        <span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="GraphvizOutput.generate">
+<a class="viewcode-back" href="../../../api/output.html#pycallgraph.output.GraphvizOutput.generate">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Returns a string with the contents of a DOT file for Graphviz to</span>
+<span class="sd">        parse.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">indent_join</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="mi">12</span>
+
+        <span class="k">return</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s1">        digraph G {{</span>
+
+<span class="s1">            // Attributes</span>
+<span class="s1">            </span><span class="si">{0}</span>
+
+<span class="s1">            // Groups</span>
+<span class="s1">            </span><span class="si">{1}</span>
+
+<span class="s1">            // Nodes</span>
+<span class="s1">            </span><span class="si">{2}</span>
+
+<span class="s1">            // Edges</span>
+<span class="s1">            </span><span class="si">{3}</span>
+
+<span class="s1">        }}</span>
+<span class="s1">        &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">indent_join</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generate_attributes</span><span class="p">()),</span>
+            <span class="n">indent_join</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generate_groups</span><span class="p">()),</span>
+            <span class="n">indent_join</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generate_nodes</span><span class="p">()),</span>
+            <span class="n">indent_join</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generate_edges</span><span class="p">()),</span>
+        <span class="p">))</span></div>
+
+
+    <span class="k">def</span> <span class="nf">attrs_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">attr</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> = &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&quot;</span><span class="si">{0}</span><span class="s1">&quot; [</span><span class="si">{1}</span><span class="s1">];&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs_from_dict</span><span class="p">(</span><span class="n">attr</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&quot;</span><span class="si">{0.src_func}</span><span class="s1">&quot; -&gt; &quot;</span><span class="si">{0.dst_func}</span><span class="s1">&quot; [</span><span class="si">{1}</span><span class="s1">];&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">edge</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs_from_dict</span><span class="p">(</span><span class="n">attr</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">generate_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">section</span><span class="p">,</span> <span class="n">attrs</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_attributes</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> [ </span><span class="si">{1}</span><span class="s1"> ];&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">section</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs_from_dict</span><span class="p">(</span><span class="n">attrs</span><span class="p">),</span>
+            <span class="p">))</span>
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="k">def</span> <span class="nf">generate_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">groups</span><span class="p">():</span>
+            <span class="n">funcs</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">]</span>
+            <span class="n">funcs</span> <span class="o">=</span> <span class="s1">&#39;&quot; &quot;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">funcs</span><span class="p">)</span>
+            <span class="n">group_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_border_color</span><span class="o">.</span><span class="n">rgba_web</span><span class="p">()</span>
+            <span class="n">group_font_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_font_size</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s1">&#39;subgraph &quot;cluster_</span><span class="si">{group}</span><span class="s1">&quot; {{ &#39;</span>
+                <span class="s1">&#39;&quot;</span><span class="si">{funcs}</span><span class="s1">&quot;; &#39;</span>
+                <span class="s1">&#39;label = &quot;</span><span class="si">{group}</span><span class="s1">&quot;; &#39;</span>
+                <span class="s1">&#39;fontsize = &quot;</span><span class="si">{group_font_size}</span><span class="s1">&quot;; &#39;</span>
+                <span class="s1">&#39;fontcolor = &quot;black&quot;; &#39;</span>
+                <span class="s1">&#39;style = &quot;bold&quot;; &#39;</span>
+                <span class="s1">&#39;color=&quot;</span><span class="si">{group_color}</span><span class="s1">&quot;; }}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">locals</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="k">def</span> <span class="nf">generate_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_color_func</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="o">.</span><span class="n">rgba_web</span><span class="p">(),</span>
+                <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_label_func</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+            <span class="p">}</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">attr</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="k">def</span> <span class="nf">generate_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_color_func</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span><span class="o">.</span><span class="n">rgba_web</span><span class="p">(),</span>
+                <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_label_func</span><span class="p">(</span><span class="n">edge</span><span class="p">),</span>
+            <span class="p">}</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edge</span><span class="p">(</span><span class="n">edge</span><span class="p">,</span> <span class="n">attr</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">output</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Python Call Graph 2.1.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">pycallgraph.output.graphviz</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2007-2024 Gerald Kaszuba, et al..
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>
