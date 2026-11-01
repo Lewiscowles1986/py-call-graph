@@ -46,8 +46,9 @@
 <a class="viewcode-back" href="../../api/pycallgraph.html#pycallgraph.PyCallGraph">[docs]</a>
 <span class="k">class</span> <span class="nc">PyCallGraph</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;output can be a single Output instance or an iterable with many</span>
-<span class="sd">        of them.  Example usage:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;output can be a single Output instance or a sequence of them.</span>
+<span class="sd">        Any other iterable (for example a generator) is materialised here so</span>
+<span class="sd">        it can be iterated safely more than once.  Example usage:</span>
 
 <span class="sd">            PyCallGraph(output=GraphvizOutput(), config=Config())</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -58,9 +59,13 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">Output</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="n">output</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">output</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">Config</span><span class="p">()</span>
+
+        <span class="c1"># True between __enter__ and its matching __exit__, so a context that</span>
+        <span class="c1"># is exited more than once does not render the outputs again.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_in_context</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="n">configured_ouput</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_output</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">configured_ouput</span><span class="p">:</span>
@@ -69,10 +74,24 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Start tracing and return this instance.</span>
+
+<span class="sd">        Returning self allows ``with PyCallGraph(...) as graph:``; it used to</span>
+<span class="sd">        return None, so ``graph`` was silently bound to None.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_in_context</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="bp">self</span>
 
     <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Finish the trace and generate the outputs.</span>
+
+<span class="sd">        Idempotent, and returns a falsy value so an exception raised in the</span>
+<span class="sd">        body still propagates.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_in_context</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_in_context</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">get_tracer_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">threaded</span><span class="p">:</span>

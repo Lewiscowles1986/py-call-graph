@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>globbing_filter.GlobbingFilter — Class used for filtering methods &#8212; Python Call Graph 2.1.6 documentation</title>
+    <title>globbing_filter.GlobbingFilter &#8212; Python Call Graph 2.1.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=514cf933" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
@@ -33,7 +33,7 @@
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="api.html" accesskey="U">API Classes</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-class docutils literal notranslate"><span class="pre">globbing_filter.GlobbingFilter</span></code> — Class used for filtering methods</a></li> 
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-class docutils literal notranslate"><span class="pre">globbing_filter.GlobbingFilter</span></code></a></li> 
       </ul>
     </div>  
 
@@ -42,14 +42,30 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="globbing-filter-globbingfilter-class-used-for-filtering-methods">
-<span id="globbing-filter"></span><h1><code class="xref py py-class docutils literal notranslate"><span class="pre">globbing_filter.GlobbingFilter</span></code> — Class used for filtering methods<a class="headerlink" href="#globbing-filter-globbingfilter-class-used-for-filtering-methods" title="Link to this heading">¶</a></h1>
+  <section id="globbing-filter-globbingfilter">
+<span id="globbing-filter"></span><h1><code class="xref py py-class docutils literal notranslate"><span class="pre">globbing_filter.GlobbingFilter</span></code><a class="headerlink" href="#globbing-filter-globbingfilter" title="Link to this heading">¶</a></h1>
+<p>Selects which functions are traced, using <code class="docutils literal notranslate"><span class="pre">fnmatch</span></code> patterns. Exclusions are
+checked first, then inclusions; anything matching neither is excluded.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="pycallgraph.globbing_filter.GlobbingFilter">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pycallgraph.globbing_filter.</span></span><span class="sig-name descname"><span class="pre">GlobbingFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/globbing_filter.html#GlobbingFilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.globbing_filter.GlobbingFilter" title="Link to this definition">¶</a></dt>
 <dd><p>Filter module names using a set of globs.</p>
 <p>Objects are matched against the exclude list first, then the include list.
 Anything that passes through without matching either, is excluded.</p>
+</dd></dl>
+
+</section>
+<section id="grouper-grouper">
+<h1><code class="xref py py-class docutils literal notranslate"><span class="pre">grouper.Grouper</span></code><a class="headerlink" href="#grouper-grouper" title="Link to this heading">¶</a></h1>
+<p>Assigns each traced function to a group, which controls how nodes are grouped
+in the rendered graph. By default the top-level module name is used.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pycallgraph.grouper.Grouper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pycallgraph.grouper.</span></span><span class="sig-name descname"><span class="pre">Grouper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/grouper.html#Grouper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.grouper.Grouper" title="Link to this definition">¶</a></dt>
+<dd><p>Group module names.</p>
+<p>By default, objects are grouped by their top-level module name. Additional
+groups can be specified with the groups list and all objects will be
+matched against it.</p>
 </dd></dl>
 
 </section>
@@ -64,8 +80,12 @@ Anything that passes through without matching either, is excluded.</p>
   <div>
     <h3><a href="../index.html">Table of Contents</a></h3>
     <ul>
-<li><a class="reference internal" href="#"><code class="xref py py-class docutils literal notranslate"><span class="pre">globbing_filter.GlobbingFilter</span></code> — Class used for filtering methods</a><ul>
+<li><a class="reference internal" href="#"><code class="xref py py-class docutils literal notranslate"><span class="pre">globbing_filter.GlobbingFilter</span></code></a><ul>
 <li><a class="reference internal" href="#pycallgraph.globbing_filter.GlobbingFilter"><code class="docutils literal notranslate"><span class="pre">GlobbingFilter</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#grouper-grouper"><code class="xref py py-class docutils literal notranslate"><span class="pre">grouper.Grouper</span></code></a><ul>
+<li><a class="reference internal" href="#pycallgraph.grouper.Grouper"><code class="docutils literal notranslate"><span class="pre">Grouper</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -116,7 +136,7 @@ Anything that passes through without matching either, is excluded.</p>
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="api.html" >API Classes</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-class docutils literal notranslate"><span class="pre">globbing_filter.GlobbingFilter</span></code> — Class used for filtering methods</a></li> 
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-class docutils literal notranslate"><span class="pre">globbing_filter.GlobbingFilter</span></code></a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
