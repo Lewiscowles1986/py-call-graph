@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>SyncronousTracer / SynchronousTracer &#8212; Python Call Graph 2.1.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=514cf933" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    
+    <script src="../_static/documentation_options.js?v=4f932e3e"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Internal Classes" href="internal.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="internal.html" title="Internal Classes"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" >API Classes</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="internal.html" accesskey="U">Internal Classes</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code> / <code class="xref py py-class docutils literal notranslate"><span class="pre">SynchronousTracer</span></code></a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="syncronoustracer-synchronoustracer">
+<h1><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code> / <code class="xref py py-class docutils literal notranslate"><span class="pre">SynchronousTracer</span></code><a class="headerlink" href="#syncronoustracer-synchronoustracer" title="Link to this heading">¶</a></h1>
+<p>The synchronous tracer installs <code class="docutils literal notranslate"><span class="pre">sys.settrace</span></code> and processes each event as
+it arrives on the calling thread. It is the default.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pycallgraph.tracer.SyncronousTracer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pycallgraph.tracer.</span></span><span class="sig-name descname"><span class="pre">SyncronousTracer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/tracer.html#SyncronousTracer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.tracer.SyncronousTracer" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.tracer.SyncronousTracer.memory">
+<span class="sig-name descname"><span class="pre">memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/tracer.html#SyncronousTracer.memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.tracer.SyncronousTracer.memory" title="Link to this definition">¶</a></dt>
+<dd><p>Return the current memory usage in bytes, or None if disabled.</p>
+<p>A negative reading from <code class="docutils literal notranslate"><span class="pre">memory_usage</span></code> means “could not measure”
+(for example <code class="docutils literal notranslate"><span class="pre">ps</span> <span class="pre">v</span></code> on macOS has no RSS column). That is reported as
+<code class="docutils literal notranslate"><span class="pre">None</span></code> so it is not published as a real, negative figure, and the
+reason is logged once rather than on every traced event.</p>
+</dd></dl>
+
+</dd></dl>
+
+<p>Both spellings resolve to the same class. The historical names misspell
+“Synchronous” and “Asynchronous”, but they are part of the public API, so the
+correctly spelled names (<code class="xref py py-class docutils literal notranslate"><span class="pre">SynchronousTracer</span></code> and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">AsynchronousTracer</span></code>) are provided as aliases rather than a rename.</p>
+</section>
+<section id="asyncronoustracer-asynchronoustracer">
+<h1><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncronousTracer</span></code> / <code class="xref py py-class docutils literal notranslate"><span class="pre">AsynchronousTracer</span></code><a class="headerlink" href="#asyncronoustracer-asynchronoustracer" title="Link to this heading">¶</a></h1>
+<p>The asynchronous tracer hands every event to a
+<a class="reference internal" href="#pycallgraph.tracer.TraceProcessor" title="pycallgraph.tracer.TraceProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">TraceProcessor</span></code></a> worker thread over a queue, so the
+traced program is not slowed down by the work of recording. It is enabled with
+<code class="docutils literal notranslate"><span class="pre">Config(threaded=True)</span></code> or <code class="docutils literal notranslate"><span class="pre">--threaded</span></code>.</p>
+<p>Shutdown is bounded: <code class="xref py py-meth docutils literal notranslate"><span class="pre">done()</span></code> waits
+for the queue to drain and then joins the worker with a timeout. If the worker
+does not finish in time, a <code class="xref py py-class docutils literal notranslate"><span class="pre">PyCallGraphException</span></code>
+is raised rather than blocking the traced program indefinitely.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pycallgraph.tracer.AsyncronousTracer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pycallgraph.tracer.</span></span><span class="sig-name descname"><span class="pre">AsyncronousTracer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/tracer.html#AsyncronousTracer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.tracer.AsyncronousTracer" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="pycallgraph.tracer.AsyncronousTracer.shutdown_timeout">
+<span class="sig-name descname"><span class="pre">shutdown_timeout</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10.0</span></em><a class="headerlink" href="#pycallgraph.tracer.AsyncronousTracer.shutdown_timeout" title="Link to this definition">¶</a></dt>
+<dd><p>How long to wait for the trace processor to drain and exit. A stuck
+processor used to block the traced program forever with no diagnostics.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="traceprocessor">
+<h1><code class="xref py py-class docutils literal notranslate"><span class="pre">TraceProcessor</span></code><a class="headerlink" href="#traceprocessor" title="Link to this heading">¶</a></h1>
+<p>The processor accumulates the statistics the outputs render, and is also a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">threading.Thread</span></code> for the asynchronous case.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pycallgraph.tracer.TraceProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pycallgraph.tracer.</span></span><span class="sig-name descname"><span class="pre">TraceProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/tracer.html#TraceProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.tracer.TraceProcessor" title="Link to this definition">¶</a></dt>
+<dd><p>Contains a callback used by sys.settrace, which collects information about
+function call count, time taken, etc.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.tracer.TraceProcessor.done">
+<span class="sig-name descname"><span class="pre">done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/tracer.html#TraceProcessor.done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.tracer.TraceProcessor.done" title="Link to this definition">¶</a></dt>
+<dd><p>Ask the processor to finish and exit.</p>
+<p>Everything already queued is still processed, then the worker exits
+on the sentinel. This replaces a busy-wait on <code class="docutils literal notranslate"><span class="pre">queue.empty()</span></code> that
+spun forever if the worker had already stopped.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.tracer.TraceProcessor.init_libpath">
+<span class="sig-name descname"><span class="pre">init_libpath</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/tracer.html#TraceProcessor.init_libpath"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.tracer.TraceProcessor.init_libpath" title="Link to this definition">¶</a></dt>
+<dd><p>Work out the directories which contain library (non-user) code.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sysconfig</span></code> reports the <em>logical</em> install location, which is often a
+symlink (Homebrew, asdf and conda all do this). Modules report their
+<em>real</em> path via <code class="docutils literal notranslate"><span class="pre">__file__</span></code>, so both the logical and the resolved
+paths are recorded to keep detection working on symlinked installs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.tracer.TraceProcessor.is_module_stdlib">
+<span class="sig-name descname"><span class="pre">is_module_stdlib</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/tracer.html#TraceProcessor.is_module_stdlib"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.tracer.TraceProcessor.is_module_stdlib" title="Link to this definition">¶</a></dt>
+<dd><p>Returns True if <code class="docutils literal notranslate"><span class="pre">file_name</span></code> lives under a known library directory.</p>
+<p>“Library” here means the standard library <em>and</em> installed packages:
+<code class="docutils literal notranslate"><span class="pre">sysconfig</span></code>’s stdlib/platstdlib plus the purelib/platlib
+(site-packages) directories. That mirrors the <code class="docutils literal notranslate"><span class="pre">--stdlib</span></code> option,
+which controls whether both are included in the trace.</p>
+<p>The check is a path-boundary prefix match on the symlink-resolved,
+lower-cased path, so it is tolerant of symlinked interpreters
+(Homebrew, asdf, conda) and of case differences between the recorded
+paths and a module’s <code class="docutils literal notranslate"><span class="pre">__file__</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.tracer.TraceProcessor.process">
+<span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/tracer.html#TraceProcessor.process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.tracer.TraceProcessor.process" title="Link to this definition">¶</a></dt>
+<dd><p>This function processes a trace result. Keeps track of
+relationships between calls.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pycallgraph.tracer.TraceProcessor.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pycallgraph/tracer.html#TraceProcessor.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pycallgraph.tracer.TraceProcessor.run" title="Link to this definition">¶</a></dt>
+<dd><p>Method representing the thread’s activity.</p>
+<p>You may override this method in a subclass. The standard run() method
+invokes the callable object passed to the object’s constructor as the
+target argument, if any, with sequential and keyword arguments taken
+from the args and kwargs arguments, respectively.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code> / <code class="xref py py-class docutils literal notranslate"><span class="pre">SynchronousTracer</span></code></a><ul>
+<li><a class="reference internal" href="#pycallgraph.tracer.SyncronousTracer"><code class="docutils literal notranslate"><span class="pre">SyncronousTracer</span></code></a><ul>
+<li><a class="reference internal" href="#pycallgraph.tracer.SyncronousTracer.memory"><code class="docutils literal notranslate"><span class="pre">SyncronousTracer.memory()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#asyncronoustracer-asynchronoustracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncronousTracer</span></code> / <code class="xref py py-class docutils literal notranslate"><span class="pre">AsynchronousTracer</span></code></a><ul>
+<li><a class="reference internal" href="#pycallgraph.tracer.AsyncronousTracer"><code class="docutils literal notranslate"><span class="pre">AsyncronousTracer</span></code></a><ul>
+<li><a class="reference internal" href="#pycallgraph.tracer.AsyncronousTracer.shutdown_timeout"><code class="docutils literal notranslate"><span class="pre">AsyncronousTracer.shutdown_timeout</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#traceprocessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">TraceProcessor</span></code></a><ul>
+<li><a class="reference internal" href="#pycallgraph.tracer.TraceProcessor"><code class="docutils literal notranslate"><span class="pre">TraceProcessor</span></code></a><ul>
+<li><a class="reference internal" href="#pycallgraph.tracer.TraceProcessor.done"><code class="docutils literal notranslate"><span class="pre">TraceProcessor.done()</span></code></a></li>
+<li><a class="reference internal" href="#pycallgraph.tracer.TraceProcessor.init_libpath"><code class="docutils literal notranslate"><span class="pre">TraceProcessor.init_libpath()</span></code></a></li>
+<li><a class="reference internal" href="#pycallgraph.tracer.TraceProcessor.is_module_stdlib"><code class="docutils literal notranslate"><span class="pre">TraceProcessor.is_module_stdlib()</span></code></a></li>
+<li><a class="reference internal" href="#pycallgraph.tracer.TraceProcessor.process"><code class="docutils literal notranslate"><span class="pre">TraceProcessor.process()</span></code></a></li>
+<li><a class="reference internal" href="#pycallgraph.tracer.TraceProcessor.run"><code class="docutils literal notranslate"><span class="pre">TraceProcessor.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="internal.html"
+                          title="previous chapter">Internal Classes</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/tracer.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="internal.html" title="Internal Classes"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Python Call Graph 2.1.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" >API Classes</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="internal.html" >Internal Classes</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncronousTracer</span></code> / <code class="xref py py-class docutils literal notranslate"><span class="pre">SynchronousTracer</span></code></a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2007-2024 Gerald Kaszuba, et al..
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>
